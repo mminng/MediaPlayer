@@ -6,7 +6,7 @@ import com.github.mminng.media.BuildConfig
 /**
  * Created by zh on 2021/10/1.
  */
-private const val TAG: String = "MediaPlayer"
+private const val TAG: String = "PlayerDebug"
 
 internal fun v(message: String) {
     if (BuildConfig.DEBUG) {

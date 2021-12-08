@@ -6,8 +6,10 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.SurfaceHolder
 import android.view.View
+import android.widget.Button
 import com.github.mminng.media.player.DefaultPlayer
 import com.github.mminng.media.PlayerView
+import com.github.mminng.media.renderer.RenderMode
 
 class MainActivity : AppCompatActivity() {
 
@@ -17,6 +19,15 @@ class MainActivity : AppCompatActivity() {
     private val playerView: PlayerView by lazy {
         findViewById(R.id.player_view)
     }
+    private val renderMode: Button by lazy {
+        findViewById(R.id.button)
+    }
+    private val renderMode1: Button by lazy {
+        findViewById(R.id.button1)
+    }
+    private val renderMode2: Button by lazy {
+        findViewById(R.id.button2)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,9 +35,9 @@ class MainActivity : AppCompatActivity() {
         playerView.setPlayer(DefaultPlayer())
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/09/30/mp4/210930112954504189.mp4")
 //        playerView.setDataSource(localPath)
-        playerView.setDataSource("https://v.96koo.net/common/LzQxOTAvcmVsZWFzZS8yMDIwMDczMC9ETTRCV0cyV3llL0RNNEJXRzJXeWVfODQ4XzgwMA==_19929.m3u8")
+//        playerView.setDataSource("https://v.96koo.net/common/LzQxOTAvcmVsZWFzZS8yMDIwMDczMC9ETTRCV0cyV3llL0RNNEJXRzJXeWVfODQ4XzgwMA==_19929.m3u8")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2020/09/03/mp4/200903192102416527.mp4")
-//        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/01/07/mp4/210107172407759182.mp4")
+        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/01/07/mp4/210107172407759182.mp4")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/12/05/mp4/211205092838969197.mp4")
         playerView.setOnFullScreenModeChangedListener {
@@ -36,6 +47,15 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                 }
+        }
+        renderMode.setOnClickListener {
+            playerView.setRenderMode(RenderMode.FIT)
+        }
+        renderMode1.setOnClickListener {
+            playerView.setRenderMode(RenderMode.FILL)
+        }
+        renderMode2.setOnClickListener {
+            playerView.setRenderMode(RenderMode.ZOOM)
         }
     }
 

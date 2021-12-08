@@ -23,4 +23,5 @@ interface Controller {
 
         fun onProgressChanged(position: Int)
     }
+
 }

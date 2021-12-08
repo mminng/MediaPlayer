@@ -38,4 +38,5 @@ interface Player {
 
         fun onPlayerState(isPlaying: Boolean)
     }
+
 }

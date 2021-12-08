@@ -1,20 +1,26 @@
-package com.github.mminng.media.render
+package com.github.mminng.media.renderer
 
 import android.content.Context
 import android.util.AttributeSet
-import android.widget.FrameLayout
+import android.view.SurfaceHolder
+import android.view.SurfaceView
+import android.view.View
 import kotlin.math.abs
 
 /**
  * Created by zh on 2021/12/4.
  */
-open class RenderView @JvmOverloads constructor(
+class SurfaceRenderView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
-) : FrameLayout(context, attrs), Render {
+) : SurfaceView(context, attrs), Renderer, SurfaceHolder.Callback {
 
     private var _aspectRatio: Float = 0.0F
     private var _renderMode: RenderMode = RenderMode.FIT
-    var renderCallback: Render.RenderCallback? = null
+    private var _renderCallback: Renderer.OnRenderCallback? = null
+
+    init {
+        holder.addCallback(this)
+    }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
@@ -63,8 +69,27 @@ open class RenderView @JvmOverloads constructor(
         }
     }
 
-    override fun setCallback(callback: Render.RenderCallback) {
-        if (renderCallback === callback) return
-        renderCallback = callback
+    override fun getView(): View = this
+
+    override fun release() {
+        //NO OP
     }
+
+    override fun setCallback(callback: Renderer.OnRenderCallback) {
+        if (_renderCallback === callback) return
+        _renderCallback = callback
+    }
+
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        _renderCallback?.onRenderCreated(holder.surface)
+    }
+
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        _renderCallback?.onRenderChanged(width, height)
+    }
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        _renderCallback?.onRenderDestroyed()
+    }
+
 }

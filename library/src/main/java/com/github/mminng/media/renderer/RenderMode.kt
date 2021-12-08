@@ -1,4 +1,4 @@
-package com.github.mminng.media.render
+package com.github.mminng.media.renderer
 
 /**
  * Created by zh on 2021/10/5.
