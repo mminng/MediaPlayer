@@ -6,8 +6,8 @@ import android.view.Gravity
 import android.view.Surface
 import android.widget.FrameLayout
 import com.github.mminng.media.controller.Controller
-import com.github.mminng.media.controller.ControllerView
 import com.github.mminng.media.player.Player
+import com.github.mminng.media.player.state.PlayerState
 import com.github.mminng.media.renderer.RenderMode
 import com.github.mminng.media.renderer.Renderer
 import com.github.mminng.media.renderer.SurfaceRenderView
@@ -20,49 +20,43 @@ import com.github.mminng.media.utils.d
 class PlayerView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : FrameLayout(context, attrs),
-    Renderer.OnRenderCallback, Player.OnPlayerListener, Controller.OnControllerListener {
+    Renderer.OnRenderCallback, Player.OnPlayerListener,
+    Player.OnPlayerStateListener, Controller.OnControllerListener {
 
-    private val interval: Long = 200
+    private var _renderer: Renderer
+    private var _player: Player? = null
+    private var _controller: Controller? = null
 
-    private var _renderView: Renderer
-    private var player: Player? = null
-    private val controller: ControllerView = ControllerView(context)
     private var onFullScreenModeChangedListener: (() -> Unit)? = null
-    private val _progressRunnable: Runnable = Runnable {
-        updateProgress()
-    }
 
     init {
         context.theme.obtainStyledAttributes(attrs, R.styleable.PlayerView, 0, 0).apply {
             try {
                 val renderType = getInt(R.styleable.PlayerView_renderType, 0)
-                _renderView = if (renderType == 0) {
-                    SurfaceRenderView(context)
-                } else {
-                    TextureRenderView(context)
-                }
+                _renderer =
+                    if (renderType == 0) SurfaceRenderView(context) else TextureRenderView(context)
             } finally {
                 recycle()
             }
         }
         addView(
-            _renderView.getView(),
+            _renderer.getView(),
             LayoutParams(
                 LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT,
                 Gravity.CENTER
             )
         )
-        addView(controller)
-        _renderView.setCallback(this)
-        controller.setOnControllerListener(this)
+        _renderer.setCallback(this)
     }
 
     override fun onPlayPause() {
-        player?.let {
+        _player?.let {
             if (it.isPlaying()) {
+                _controller?.stopProgress()
                 it.pause()
             } else {
+                _controller?.updateProgress()
                 it.start()
             }
         }
@@ -72,72 +66,106 @@ class PlayerView @JvmOverloads constructor(
         onFullScreenModeChangedListener?.invoke()
     }
 
-    override fun onProgressChanged(position: Int) {
-        player?.seekTo(position)
+    override fun onSeekTo(position: Int) {
+        _player?.seekTo(position)
     }
 
-    override fun onPlayerState(isPlaying: Boolean) {
-        controller.onPlayPause(isPlaying)
+    override fun onProgressUpdate() {
+        _player?.let {
+            _controller?.onProgressUpdate(it.getCurrentPosition())
+        }
+    }
+
+    override fun onPlayerStateChanged(state: PlayerState) {
+        when (state) {
+            PlayerState.IDLE -> {
+
+            }
+            PlayerState.BUFFERING -> {
+
+            }
+            PlayerState.READY -> {
+
+            }
+            PlayerState.COMPLETED -> {
+
+            }
+            PlayerState.ERROR -> {
+
+            }
+        }
+    }
+
+    override fun onPlayingChanged(isPlaying: Boolean) {
+        _controller?.onPlayPause(isPlaying)
     }
 
     override fun onVideoSizeChanged(width: Int, height: Int) {
         d("width=$width")
         d("height=$height")
-        _renderView.setAspectRatio(width.toFloat() / height.toFloat())
-        updateProgress()
-        player?.let { controller.onDuration(it.getDuration()) }
-
+        _controller?.updateProgress()
+        _renderer.setAspectRatio(width.toFloat() / height.toFloat())
+        _player?.let { _controller?.onDuration(it.getDuration()) }
     }
 
-    fun setPlayer(player: Player) {
-        player.setOnVideoSizeChangedListener(this)
-        this.player = player
+    override fun onBufferingUpdate(bufferingProgress: Int) {
+        _controller?.onBufferingProgressUpdate(bufferingProgress)
     }
 
     fun setDataSource(source: String) {
-        player?.let {
+        _player?.let {
             it.setDataSource(source)
             it.prepareAsync()
         }
     }
 
     fun start() {
-        player?.start()
+        _player?.start()
     }
 
     fun pause() {
-        player?.pause()
+        _player?.pause()
     }
 
     fun isPlaying(): Boolean {
-        player?.let {
+        _player?.let {
             return it.isPlaying()
         }
         return false
     }
 
     fun release() {
-        removeCallbacks(_progressRunnable)
-        player?.release()
+        _controller?.stopProgress()
+        _player?.release()
+        d("player release")
     }
 
     fun setOnFullScreenModeChangedListener(listener: () -> Unit) {
         this.onFullScreenModeChangedListener = listener
     }
 
-    fun updateProgress() {
-        player?.let {
-            controller.onProgress(it.getCurrentPosition())
-        }
-        postDelayed(_progressRunnable, interval)
+    fun setRenderMode(mode: RenderMode) {
+        _renderer.setRenderMode(mode)
     }
 
-    fun setRenderMode(mode: RenderMode) {
-        _renderView.setRenderMode(mode)
+    fun setPlayer(player: Player) {
+        if (_player == null) {
+            _player = player
+            player.setOnPlayerListener(this)
+            player.setOnPlayerStateListener(this)
+        }
+    }
+
+    fun setController(controller: Controller) {
+        if (_controller == null) {
+            _controller = controller
+            addView(controller.getView())
+            controller.setOnControllerListener(this)
+        }
     }
 
     override fun onRenderCreated(surface: Surface) {
-        player?.setSurface(surface)
+        _player?.setSurface(surface)
     }
 
     override fun onRenderChanged(width: Int, height: Int) {
@@ -148,7 +176,7 @@ class PlayerView @JvmOverloads constructor(
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        _renderView.release()
+        _renderer.release()
     }
 
 }

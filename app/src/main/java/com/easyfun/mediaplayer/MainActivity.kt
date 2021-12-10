@@ -4,11 +4,11 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.SurfaceHolder
 import android.view.View
 import android.widget.Button
-import com.github.mminng.media.player.DefaultPlayer
+import com.github.mminng.media.DefaultPlayer
 import com.github.mminng.media.PlayerView
+import com.github.mminng.media.DefaultController
 import com.github.mminng.media.renderer.RenderMode
 
 class MainActivity : AppCompatActivity() {
@@ -28,17 +28,25 @@ class MainActivity : AppCompatActivity() {
     private val renderMode2: Button by lazy {
         findViewById(R.id.button2)
     }
+    private val controller: Button by lazy {
+        findViewById(R.id.controller)
+    }
+    private val controller1: Button by lazy {
+        findViewById(R.id.controller1)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        val controllerView = DefaultController(this)
+        val controllerView1 = MyControllerView(this)
         playerView.setPlayer(DefaultPlayer())
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/09/30/mp4/210930112954504189.mp4")
 //        playerView.setDataSource(localPath)
 //        playerView.setDataSource("https://v.96koo.net/common/LzQxOTAvcmVsZWFzZS8yMDIwMDczMC9ETTRCV0cyV3llL0RNNEJXRzJXeWVfODQ4XzgwMA==_19929.m3u8")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2020/09/03/mp4/200903192102416527.mp4")
-        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/01/07/mp4/210107172407759182.mp4")
-//        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
+//        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/01/07/mp4/210107172407759182.mp4")
+        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/12/05/mp4/211205092838969197.mp4")
         playerView.setOnFullScreenModeChangedListener {
             requestedOrientation =
@@ -56,6 +64,12 @@ class MainActivity : AppCompatActivity() {
         }
         renderMode2.setOnClickListener {
             playerView.setRenderMode(RenderMode.ZOOM)
+        }
+        controller.setOnClickListener {
+            playerView.setController(controllerView)
+        }
+        controller1.setOnClickListener {
+            playerView.setController(controllerView1)
         }
     }
 

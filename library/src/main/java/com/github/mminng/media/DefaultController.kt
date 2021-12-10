@@ -1,40 +1,46 @@
-package com.github.mminng.media.controller
+package com.github.mminng.media
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.LayoutInflater
 import android.view.View
-import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
-import com.github.mminng.media.R
+import com.github.mminng.media.controller.BaseController
 import com.github.mminng.media.utils.convertMillis
 
 /**
  * Created by zh on 2021/9/20.
  */
-class ControllerView @JvmOverloads constructor(
+class DefaultController @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
-) : FrameLayout(context, attrs), Controller, View.OnClickListener,
+) : BaseController(context, attrs), View.OnClickListener,
     SeekBar.OnSeekBarChangeListener {
 
-    private var playPauseView: ImageView
-    private var timeBar: SeekBar
-    private var positionView: TextView
-    private var durationView: TextView
-    private var fullScreen: ImageView
+    private val playPauseView: ImageView by lazy {
+        findViewById(R.id.media_play_pause)
+    }
+    private val timeBar: SeekBar by lazy {
+        findViewById(R.id.media_seekbar)
+    }
+    private val positionView: TextView by lazy {
+        findViewById(R.id.media_position)
+    }
+    private val durationView: TextView by lazy {
+        findViewById(R.id.media_duration)
+    }
+    private val fullScreen: ImageView by lazy {
+        findViewById(R.id.media_fullScreen)
+    }
 
-    private var controllerListener: Controller.OnControllerListener? = null
     private var seekFromUser: Boolean = false
 
-    init {
-        LayoutInflater.from(context).inflate(R.layout.player_control_view, this)
-        playPauseView = findViewById(R.id.media_play_pause)
-        timeBar = findViewById(R.id.media_seekbar)
-        positionView = findViewById(R.id.media_position)
-        durationView = findViewById(R.id.media_duration)
-        fullScreen = findViewById(R.id.media_fullScreen)
+    override fun setControllerLayout(): Int {
+        return R.layout.player_control_view
+    }
+
+    override fun onLayoutCreated(view: View) {
+        //also you can do findViewById() here
         playPauseView.setOnClickListener(this)
         fullScreen.setOnClickListener(this)
         timeBar.setOnSeekBarChangeListener(this)
@@ -53,7 +59,7 @@ class ControllerView @JvmOverloads constructor(
     override fun onStopTrackingTouch(seekBar: SeekBar?) {
         seekFromUser = false
         seekBar?.let {
-            controllerListener?.onProgressChanged(it.progress)
+            controllerListener?.onSeekTo(it.progress)
         }
     }
 
@@ -92,16 +98,15 @@ class ControllerView @JvmOverloads constructor(
         timeBar.max = duration
     }
 
-    override fun onProgress(progress: Int) {
+    override fun onProgressUpdate(progress: Int) {
         if (!seekFromUser) {
             positionView.text = convertMillis(progress)
             timeBar.progress = progress
         }
     }
 
-    override fun setOnControllerListener(listener: Controller.OnControllerListener) {
-        if (controllerListener === listener) return
-        controllerListener = listener
+    override fun onBufferingProgressUpdate(bufferingProgress: Int) {
+        timeBar.secondaryProgress = bufferingProgress
     }
 
 }

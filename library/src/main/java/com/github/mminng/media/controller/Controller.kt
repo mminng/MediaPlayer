@@ -1,5 +1,7 @@
 package com.github.mminng.media.controller
 
+import android.view.View
+
 /**
  * Created by zh on 2021/10/1.
  */
@@ -11,7 +13,15 @@ interface Controller {
 
     fun onDuration(duration: Int)
 
-    fun onProgress(progress: Int)
+    fun onProgressUpdate(progress: Int)
+
+    fun onBufferingProgressUpdate(bufferingProgress: Int)
+
+    fun getView(): View
+
+    fun updateProgress()
+
+    fun stopProgress()
 
     fun setOnControllerListener(listener: OnControllerListener)
 
@@ -21,7 +31,9 @@ interface Controller {
 
         fun onFullScreen()
 
-        fun onProgressChanged(position: Int)
+        fun onSeekTo(position: Int)
+
+        fun onProgressUpdate()
     }
 
 }

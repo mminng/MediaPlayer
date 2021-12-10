@@ -1,25 +1,46 @@
-package com.github.mminng.media.player
+package com.github.mminng.media
 
 import android.media.MediaPlayer
 import android.view.Surface
 import android.view.SurfaceHolder
+import com.github.mminng.media.player.BasePlayer
+import com.github.mminng.media.utils.d
 
 /**
  * Created by zh on 2021/10/2.
  */
-class DefaultPlayer : Player {
+class DefaultPlayer : BasePlayer() {
 
-    private var playerListener: Player.OnPlayerListener? = null
     private val player: MediaPlayer = MediaPlayer()
 
     init {
         player.setOnPreparedListener {
         }
         player.setOnVideoSizeChangedListener { _, width, height ->
-            playerListener?.onVideoSizeChanged(width, height)
+            videoSizeChanged(width, height)
         }
         player.setOnCompletionListener {
-            playerListener?.onPlayerState(isPlaying())
+            playingChanged(isPlaying())
+        }
+        player.setOnBufferingUpdateListener { mp, percent ->
+            bufferingUpdate(mp.duration / 100 * percent)
+            d("duration:${mp.duration}")
+            d("bufferingProgress:${mp.duration / 100 * percent}")
+        }
+        player.setOnSeekCompleteListener {
+        }
+        player.setOnInfoListener { mp, what, extra ->
+            when (what) {
+                MediaPlayer.MEDIA_INFO_BUFFERING_START -> {
+                    //暂停播放开始缓冲更多数据
+                    d("Info:暂停播放开始缓冲更多数据")
+                }
+                MediaPlayer.MEDIA_INFO_BUFFERING_END -> {
+                    //缓冲了足够的数据重新开始播放
+                    d("Info:缓冲了足够的数据重新开始播放")
+                }
+            }
+            return@setOnInfoListener false
         }
     }
 
@@ -33,12 +54,12 @@ class DefaultPlayer : Player {
 
     override fun start() {
         player.start()
-        playerListener?.onPlayerState(isPlaying())
+        playingChanged(isPlaying())
     }
 
     override fun pause() {
         player.pause()
-        playerListener?.onPlayerState(isPlaying())
+        playingChanged(isPlaying())
     }
 
     override fun seekTo(position: Int) {
@@ -55,11 +76,6 @@ class DefaultPlayer : Player {
 
     override fun setSurface(display: Surface) {
         player.setSurface(display)
-    }
-
-    override fun setOnVideoSizeChangedListener(listener: Player.OnPlayerListener) {
-        if (playerListener === listener) return
-        playerListener = listener
     }
 
     override fun isPlaying(): Boolean = player.isPlaying

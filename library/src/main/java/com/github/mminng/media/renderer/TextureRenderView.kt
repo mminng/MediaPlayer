@@ -80,7 +80,7 @@ class TextureRenderView @JvmOverloads constructor(
     override fun release() {
         _surfaceTexture?.release()
         surface.release()
-        d("TextureRenderView:released")
+        d("TextureRenderView released")
     }
 
     override fun setCallback(callback: Renderer.OnRenderCallback) {
