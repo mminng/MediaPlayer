@@ -36,7 +36,7 @@ class DefaultController @JvmOverloads constructor(
     private var seekFromUser: Boolean = false
 
     override fun setControllerLayout(): Int {
-        return R.layout.player_control_view
+        return R.layout.default_controller_layout
     }
 
     override fun onLayoutCreated(view: View) {

@@ -27,8 +27,6 @@ interface Player {
 
     fun bufferingUpdate(bufferingProgress: Int)
 
-    fun playingChanged(isPlaying: Boolean)
-
     fun playerStateChanged(state: PlayerState)
 
     fun setDisplay(display: SurfaceHolder)
@@ -36,6 +34,16 @@ interface Player {
     fun setSurface(display: Surface)
 
     fun isPlaying(): Boolean
+
+    fun completion()
+
+    fun prepared()
+
+    fun bufferingStart()
+
+    fun bufferingEnd()
+
+    fun error(message: String)
 
     fun release()
 
@@ -52,9 +60,7 @@ interface Player {
 
     interface OnPlayerStateListener {
 
-        fun onPlayerStateChanged(state: PlayerState)
-
-        fun onPlayingChanged(isPlaying: Boolean)
+        fun onPlayerStateChanged(state: PlayerState, error: String = "")
     }
 
 }

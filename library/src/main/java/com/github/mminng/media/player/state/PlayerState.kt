@@ -7,7 +7,10 @@ sealed class PlayerState {
 
     object IDLE : PlayerState()
     object BUFFERING : PlayerState()
-    object READY : PlayerState()
+    object BUFFERED : PlayerState()
+    object PREPARED : PlayerState()
+    object STARTED : PlayerState()
+    object PAUSED : PlayerState()
     object COMPLETED : PlayerState()
     object ERROR : PlayerState()
 

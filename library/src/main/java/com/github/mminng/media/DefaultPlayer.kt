@@ -15,32 +15,44 @@ class DefaultPlayer : BasePlayer() {
 
     init {
         player.setOnPreparedListener {
+            prepared()
         }
         player.setOnVideoSizeChangedListener { _, width, height ->
             videoSizeChanged(width, height)
         }
         player.setOnCompletionListener {
-            playingChanged(isPlaying())
+            completion()
         }
         player.setOnBufferingUpdateListener { mp, percent ->
             bufferingUpdate(mp.duration / 100 * percent)
-            d("duration:${mp.duration}")
-            d("bufferingProgress:${mp.duration / 100 * percent}")
+//            d("duration:${mp.duration}")
+//            d("bufferingProgress:${mp.duration / 100 * percent}")
         }
         player.setOnSeekCompleteListener {
+            d("SeekComplete")
         }
         player.setOnInfoListener { mp, what, extra ->
             when (what) {
                 MediaPlayer.MEDIA_INFO_BUFFERING_START -> {
                     //暂停播放开始缓冲更多数据
                     d("Info:暂停播放开始缓冲更多数据")
+                    bufferingStart()
                 }
                 MediaPlayer.MEDIA_INFO_BUFFERING_END -> {
                     //缓冲了足够的数据重新开始播放
                     d("Info:缓冲了足够的数据重新开始播放")
+                    bufferingEnd()
+                }
+                MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START -> {
+                    d("Info:第一帧开始渲染")
+                    bufferingEnd()
                 }
             }
-            return@setOnInfoListener false
+            false
+        }
+        player.setOnErrorListener { mp, what, extra ->
+            error("what=$what/extra=$extra")
+            true
         }
     }
 
@@ -54,12 +66,10 @@ class DefaultPlayer : BasePlayer() {
 
     override fun start() {
         player.start()
-        playingChanged(isPlaying())
     }
 
     override fun pause() {
         player.pause()
-        playingChanged(isPlaying())
     }
 
     override fun seekTo(position: Int) {

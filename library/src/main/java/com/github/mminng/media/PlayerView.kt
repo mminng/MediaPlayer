@@ -4,6 +4,8 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.Surface
+import android.view.Window
+import android.view.WindowManager
 import android.widget.FrameLayout
 import com.github.mminng.media.controller.Controller
 import com.github.mminng.media.player.Player
@@ -53,11 +55,17 @@ class PlayerView @JvmOverloads constructor(
     override fun onPlayPause() {
         _player?.let {
             if (it.isPlaying()) {
-                _controller?.stopProgress()
                 it.pause()
+                keepScreenOn = false
+                d("keepScreenOff")
+                _controller?.stopProgress()
+                _controller?.onPlayPause(false)
             } else {
-                _controller?.updateProgress()
                 it.start()
+                keepScreenOn = true
+                d("keepScreenOn")
+                _controller?.updateProgress()
+                _controller?.onPlayPause(true)
             }
         }
     }
@@ -76,28 +84,44 @@ class PlayerView @JvmOverloads constructor(
         }
     }
 
-    override fun onPlayerStateChanged(state: PlayerState) {
+    override fun onPlayerStateChanged(state: PlayerState, error: String) {
         when (state) {
             PlayerState.IDLE -> {
-
+                d("IDLE")
             }
             PlayerState.BUFFERING -> {
-
+                d("BUFFERING")
             }
-            PlayerState.READY -> {
-
+            PlayerState.BUFFERED -> {
+                d("BUFFERED")
+            }
+            PlayerState.PREPARED -> {
+                d("PREPARED")
+            }
+            PlayerState.STARTED -> {
+                d("STARTED")
+            }
+            PlayerState.PAUSED -> {
+                d("PAUSED")
             }
             PlayerState.COMPLETED -> {
-
+                d("COMPLETED")
             }
             PlayerState.ERROR -> {
-
+                d("ERROR=$error")
             }
         }
-    }
-
-    override fun onPlayingChanged(isPlaying: Boolean) {
-        _controller?.onPlayPause(isPlaying)
+        _controller?.setStateView(state, error)
+        _player?.let {
+            _controller?.onPlayPause(it.isPlaying())
+            if (it.isPlaying()) {
+                keepScreenOn = true
+                d("keepScreenOn")
+            } else {
+                keepScreenOn = false
+                d("keepScreenOff")
+            }
+        }
     }
 
     override fun onVideoSizeChanged(width: Int, height: Int) {

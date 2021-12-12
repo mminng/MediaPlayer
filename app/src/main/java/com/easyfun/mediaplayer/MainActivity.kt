@@ -46,8 +46,9 @@ class MainActivity : AppCompatActivity() {
 //        playerView.setDataSource("https://v.96koo.net/common/LzQxOTAvcmVsZWFzZS8yMDIwMDczMC9ETTRCV0cyV3llL0RNNEJXRzJXeWVfODQ4XzgwMA==_19929.m3u8")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2020/09/03/mp4/200903192102416527.mp4")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/01/07/mp4/210107172407759182.mp4")
-        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
+//        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/12/05/mp4/211205092838969197.mp4")
+        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/12/10/mp4/211210143103622104.mp4")
         playerView.setOnFullScreenModeChangedListener {
             requestedOrientation =
                 if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE) {
