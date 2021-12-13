@@ -4,11 +4,14 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.Toast
 import com.github.mminng.media.DefaultPlayer
 import com.github.mminng.media.PlayerView
 import com.github.mminng.media.DefaultController
+import com.github.mminng.media.player.state.PlayerState
 import com.github.mminng.media.renderer.RenderMode
 
 class MainActivity : AppCompatActivity() {
@@ -33,6 +36,9 @@ class MainActivity : AppCompatActivity() {
     }
     private val controller1: Button by lazy {
         findViewById(R.id.controller1)
+    }
+    private val getState: Button by lazy {
+        findViewById(R.id.getState)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,6 +77,13 @@ class MainActivity : AppCompatActivity() {
         }
         controller1.setOnClickListener {
             playerView.setController(controllerView1)
+        }
+        getState.setOnClickListener {
+            Toast.makeText(
+                this,
+                "${playerView.getPlayerState()}",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 

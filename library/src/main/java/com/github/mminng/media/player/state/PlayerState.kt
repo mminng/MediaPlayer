@@ -11,6 +11,7 @@ sealed class PlayerState {
     object PREPARED : PlayerState()
     object BUFFERING : PlayerState()
     object BUFFERED : PlayerState()
+    object RENDERING : PlayerState()
     object STARTED : PlayerState()
     object PAUSED : PlayerState()
     object COMPLETION : PlayerState()

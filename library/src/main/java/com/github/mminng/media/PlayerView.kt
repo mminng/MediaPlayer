@@ -23,6 +23,12 @@ class PlayerView @JvmOverloads constructor(
     Renderer.OnRenderCallback, Player.OnPlayerListener,
     Player.OnPlayerStateListener, Controller.OnControllerListener {
 
+    companion object {
+        const val STATE_KEY: String = "STATE_KEY"
+    }
+
+    private val stateMap: MutableMap<String, PlayerState> = mutableMapOf()
+
     private var _renderer: Renderer
     private var _player: Player? = null
     private var _controller: Controller? = null
@@ -151,15 +157,19 @@ class PlayerView @JvmOverloads constructor(
         when (state) {
             PlayerState.IDLE -> {
                 d("STATE IDLE")
+                stateMap[STATE_KEY] = state
             }
             PlayerState.INITIALIZED -> {
                 d("STATE INITIALIZED")
+                stateMap[STATE_KEY] = state
             }
             PlayerState.PREPARING -> {
                 d("STATE PREPARING")
+                stateMap[STATE_KEY] = state
             }
             PlayerState.PREPARED -> {
                 d("STATE PREPARED")
+                stateMap[STATE_KEY] = state
                 start()
             }
             PlayerState.BUFFERING -> {
@@ -168,23 +178,37 @@ class PlayerView @JvmOverloads constructor(
             PlayerState.BUFFERED -> {
                 d("STATE BUFFERED")
             }
+            PlayerState.RENDERING -> {
+                d("STATE RENDERING")
+            }
             PlayerState.STARTED -> {
                 d("STATE STARTED")
+                stateMap[STATE_KEY] = state
             }
             PlayerState.PAUSED -> {
                 d("STATE PAUSED")
+                stateMap[STATE_KEY] = state
             }
             PlayerState.COMPLETION -> {
                 d("STATE COMPLETED")
+                stateMap[STATE_KEY] = state
                 _controller?.stopProgress()
                 _controller?.onPlayPause(false)
             }
             PlayerState.ERROR -> {
                 d("STATE ERROR:$errorMessage")
+                stateMap[STATE_KEY] = state
                 _controller?.stopProgress()
                 _controller?.onPlayPause(false)
             }
         }
+    }
+
+    override fun getPlayerState(): PlayerState {
+        stateMap[STATE_KEY]?.let {
+            return it
+        }
+        return PlayerState.IDLE
     }
 
     fun setPlayer(player: Player) {

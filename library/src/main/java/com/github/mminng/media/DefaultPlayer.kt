@@ -3,6 +3,7 @@ package com.github.mminng.media
 import android.media.MediaPlayer
 import android.view.Surface
 import com.github.mminng.media.player.BasePlayer
+import com.github.mminng.media.player.state.PlayerState
 
 /**
  * Created by zh on 2021/10/2.
@@ -32,8 +33,13 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
     }
 
     override fun onBufferingUpdate(mp: MediaPlayer?, percent: Int) {
-        mp?.let {
-            bufferingUpdate(mp.duration / 100 * percent)
+        if (getPlayerState() != PlayerState.IDLE &&
+            getPlayerState() != PlayerState.INITIALIZED &&
+            getPlayerState() != PlayerState.ERROR
+        ) {
+            mp?.let {
+                bufferingUpdate(mp.duration / 100 * percent)
+            }
         }
     }
 
@@ -46,14 +52,10 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
                 bufferingEnd()
             }
             MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START -> {
-                bufferingEnd()
+                renderingStart()
             }
         }
-        return true
-    }
-
-    override fun onCompletion(mp: MediaPlayer?) {
-        completion()
+        return false
     }
 
     override fun onError(mp: MediaPlayer?, what: Int, extra: Int): Boolean {
@@ -75,6 +77,10 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
             }
         }
         return true
+    }
+
+    override fun onCompletion(mp: MediaPlayer?) {
+        completion()
     }
     /*MediaPlayer callback end*/
 

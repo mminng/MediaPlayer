@@ -30,6 +30,8 @@ interface Player {
 
     fun getDuration(): Int
 
+    fun getPlayerState(): PlayerState
+
     fun setOnPlayerListener(listener: OnPlayerListener)
 
     fun setOnPlayerStateListener(listener: OnPlayerStateListener)
@@ -48,6 +50,8 @@ interface Player {
     interface OnPlayerStateListener {
 
         fun onPlayerStateChanged(state: PlayerState, errorMessage: String = "")
+
+        fun getPlayerState(): PlayerState
     }
 
     fun prepared()
@@ -55,6 +59,8 @@ interface Player {
     fun bufferingStart()
 
     fun bufferingEnd()
+
+    fun renderingStart()
 
     fun completion()
 

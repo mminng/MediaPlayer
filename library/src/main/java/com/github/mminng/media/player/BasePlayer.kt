@@ -18,6 +18,10 @@ abstract class BasePlayer : Player {
         _playerListener?.onBufferingUpdate(bufferingProgress)
     }
 
+    override fun prepared() {
+        _playerStateListener?.onPlayerStateChanged(PlayerState.PREPARED)
+    }
+
     override fun bufferingStart() {
         _playerStateListener?.onPlayerStateChanged(PlayerState.BUFFERING)
     }
@@ -26,8 +30,8 @@ abstract class BasePlayer : Player {
         _playerStateListener?.onPlayerStateChanged(PlayerState.BUFFERED)
     }
 
-    override fun prepared() {
-        _playerStateListener?.onPlayerStateChanged(PlayerState.PREPARED)
+    override fun renderingStart() {
+        _playerStateListener?.onPlayerStateChanged(PlayerState.RENDERING)
     }
 
     override fun completion() {
@@ -36,6 +40,13 @@ abstract class BasePlayer : Player {
 
     override fun error(errorMessage: String) {
         _playerStateListener?.onPlayerStateChanged(PlayerState.ERROR, errorMessage)
+    }
+
+    override fun getPlayerState(): PlayerState {
+        _playerStateListener?.getPlayerState()?.let {
+            return it
+        }
+        return PlayerState.IDLE
     }
 
     override fun setOnPlayerListener(listener: Player.OnPlayerListener) {

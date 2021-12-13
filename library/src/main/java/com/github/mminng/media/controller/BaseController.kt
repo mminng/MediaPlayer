@@ -8,7 +8,6 @@ import android.widget.FrameLayout
 import androidx.annotation.LayoutRes
 import com.github.mminng.media.R
 import com.github.mminng.media.player.state.PlayerState
-import com.github.mminng.media.utils.d
 
 /**
  * Created by zh on 2021/12/9.
@@ -103,6 +102,8 @@ abstract class BaseController @JvmOverloads constructor(
             }
             PlayerState.BUFFERED -> {
                 stateBufferingView.visibility = INVISIBLE
+            }
+            PlayerState.RENDERING -> {
             }
             PlayerState.STARTED -> {
             }
