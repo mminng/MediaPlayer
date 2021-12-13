@@ -2,59 +2,81 @@ package com.github.mminng.media
 
 import android.media.MediaPlayer
 import android.view.Surface
-import android.view.SurfaceHolder
 import com.github.mminng.media.player.BasePlayer
-import com.github.mminng.media.utils.d
 
 /**
  * Created by zh on 2021/10/2.
  */
-class DefaultPlayer : BasePlayer() {
+class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
+    MediaPlayer.OnVideoSizeChangedListener, MediaPlayer.OnBufferingUpdateListener,
+    MediaPlayer.OnInfoListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener {
 
     private val player: MediaPlayer = MediaPlayer()
 
     init {
-        player.setOnPreparedListener {
-            prepared()
-        }
-        player.setOnVideoSizeChangedListener { _, width, height ->
-            videoSizeChanged(width, height)
-        }
-        player.setOnCompletionListener {
-            completion()
-        }
-        player.setOnBufferingUpdateListener { mp, percent ->
+        player.setOnPreparedListener(this)
+        player.setOnVideoSizeChangedListener(this)
+        player.setOnBufferingUpdateListener(this)
+        player.setOnInfoListener(this)
+        player.setOnCompletionListener(this)
+        player.setOnErrorListener(this)
+    }
+
+    /*MediaPlayer callback*/
+    override fun onPrepared(mp: MediaPlayer?) {
+        prepared()
+    }
+
+    override fun onVideoSizeChanged(mp: MediaPlayer?, width: Int, height: Int) {
+        videoSizeChanged(width, height)
+    }
+
+    override fun onBufferingUpdate(mp: MediaPlayer?, percent: Int) {
+        mp?.let {
             bufferingUpdate(mp.duration / 100 * percent)
-//            d("duration:${mp.duration}")
-//            d("bufferingProgress:${mp.duration / 100 * percent}")
-        }
-        player.setOnSeekCompleteListener {
-            d("SeekComplete")
-        }
-        player.setOnInfoListener { mp, what, extra ->
-            when (what) {
-                MediaPlayer.MEDIA_INFO_BUFFERING_START -> {
-                    //暂停播放开始缓冲更多数据
-                    d("Info:暂停播放开始缓冲更多数据")
-                    bufferingStart()
-                }
-                MediaPlayer.MEDIA_INFO_BUFFERING_END -> {
-                    //缓冲了足够的数据重新开始播放
-                    d("Info:缓冲了足够的数据重新开始播放")
-                    bufferingEnd()
-                }
-                MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START -> {
-                    d("Info:第一帧开始渲染")
-                    bufferingEnd()
-                }
-            }
-            false
-        }
-        player.setOnErrorListener { mp, what, extra ->
-            error("what=$what/extra=$extra")
-            true
         }
     }
+
+    override fun onInfo(mp: MediaPlayer?, what: Int, extra: Int): Boolean {
+        when (what) {
+            MediaPlayer.MEDIA_INFO_BUFFERING_START -> {
+                bufferingStart()
+            }
+            MediaPlayer.MEDIA_INFO_BUFFERING_END -> {
+                bufferingEnd()
+            }
+            MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START -> {
+                bufferingEnd()
+            }
+        }
+        return true
+    }
+
+    override fun onCompletion(mp: MediaPlayer?) {
+        completion()
+    }
+
+    override fun onError(mp: MediaPlayer?, what: Int, extra: Int): Boolean {
+        when (extra) {
+            MediaPlayer.MEDIA_ERROR_IO -> {
+                error("MEDIA_ERROR_IO")
+            }
+            MediaPlayer.MEDIA_ERROR_MALFORMED -> {
+                error("MEDIA_ERROR_MALFORMED")
+            }
+            MediaPlayer.MEDIA_ERROR_UNSUPPORTED -> {
+                error("MEDIA_ERROR_UNSUPPORTED")
+            }
+            MediaPlayer.MEDIA_ERROR_TIMED_OUT -> {
+                error("MEDIA_ERROR_TIMED_OUT")
+            }
+            else -> {
+                error("MEDIA_ERROR_UNKNOWN")
+            }
+        }
+        return true
+    }
+    /*MediaPlayer callback end*/
 
     override fun setDataSource(source: String) {
         player.setDataSource(source)
@@ -76,21 +98,22 @@ class DefaultPlayer : BasePlayer() {
         player.seekTo(position)
     }
 
-    override fun getCurrentPosition(): Int = player.currentPosition
-
-    override fun getDuration(): Int = player.duration
-
-    override fun setDisplay(display: SurfaceHolder) {
-        player.setDisplay(display)
+    override fun setSurface(surface: Surface) {
+        player.setSurface(surface)
     }
 
-    override fun setSurface(display: Surface) {
-        player.setSurface(display)
+    override fun reset() {
+        player.reset()
     }
-
-    override fun isPlaying(): Boolean = player.isPlaying
 
     override fun release() {
         player.release()
     }
+
+    override fun isPlaying(): Boolean = player.isPlaying
+
+    override fun getCurrentPosition(): Int = player.currentPosition
+
+    override fun getDuration(): Int = player.duration
+
 }

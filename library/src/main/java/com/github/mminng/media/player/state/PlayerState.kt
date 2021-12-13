@@ -6,12 +6,14 @@ package com.github.mminng.media.player.state
 sealed class PlayerState {
 
     object IDLE : PlayerState()
+    object INITIALIZED : PlayerState()
+    object PREPARING : PlayerState()
+    object PREPARED : PlayerState()
     object BUFFERING : PlayerState()
     object BUFFERED : PlayerState()
-    object PREPARED : PlayerState()
     object STARTED : PlayerState()
     object PAUSED : PlayerState()
-    object COMPLETED : PlayerState()
+    object COMPLETION : PlayerState()
     object ERROR : PlayerState()
 
 }

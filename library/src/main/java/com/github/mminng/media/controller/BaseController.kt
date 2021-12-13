@@ -8,6 +8,7 @@ import android.widget.FrameLayout
 import androidx.annotation.LayoutRes
 import com.github.mminng.media.R
 import com.github.mminng.media.player.state.PlayerState
+import com.github.mminng.media.utils.d
 
 /**
  * Created by zh on 2021/12/9.
@@ -20,8 +21,10 @@ abstract class BaseController @JvmOverloads constructor(
         private const val UPDATE_INTERVAL: Long = 300
     }
 
+    private var errorMessage: String = ""
+
     var controllerListener: Controller.OnControllerListener? = null
-    private val layout: View by lazy {
+    private val controllerLayout: View by lazy {
         inflateLayout(setControllerLayout(), true)
     }
     private val stateCoverView: View by lazy {
@@ -42,13 +45,14 @@ abstract class BaseController @JvmOverloads constructor(
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        onLayoutCreated(layout)
+        onLayoutCreated(controllerLayout)
         addView(stateBufferingView, 0)
-        addView(stateCoverView)
         addView(stateCompletionView)
         addView(stateErrorView)
-        stateCompletionView.visibility = INVISIBLE
-        stateErrorView.visibility = INVISIBLE
+        addView(stateCoverView)
+        stateBufferingView.visibility = INVISIBLE
+        stateCompletionView.visibility = GONE
+        stateErrorView.visibility = GONE
     }
 
     @LayoutRes
@@ -75,6 +79,7 @@ abstract class BaseController @JvmOverloads constructor(
     override fun getView(): View = this
 
     override fun updateProgress() {
+        stopProgress()
         controllerListener?.onProgressUpdate()
         postDelayed(progressRunnable, UPDATE_INTERVAL)
     }
@@ -83,9 +88,15 @@ abstract class BaseController @JvmOverloads constructor(
         removeCallbacks(progressRunnable)
     }
 
-    override fun setStateView(state: PlayerState, errorMessage: String) {
+    override fun setControllerState(state: PlayerState, errorMessage: String) {
         when (state) {
             PlayerState.IDLE -> {
+            }
+            PlayerState.INITIALIZED -> {
+            }
+            PlayerState.PREPARING -> {
+            }
+            PlayerState.PREPARED -> {
             }
             PlayerState.BUFFERING -> {
                 stateBufferingView.visibility = VISIBLE
@@ -93,17 +104,16 @@ abstract class BaseController @JvmOverloads constructor(
             PlayerState.BUFFERED -> {
                 stateBufferingView.visibility = INVISIBLE
             }
-            PlayerState.PREPARED -> {
-            }
             PlayerState.STARTED -> {
             }
             PlayerState.PAUSED -> {
             }
-            PlayerState.COMPLETED -> {
+            PlayerState.COMPLETION -> {
                 stateCompletionView.visibility = VISIBLE
             }
             PlayerState.ERROR -> {
                 stateErrorView.visibility = VISIBLE
+                this.errorMessage = errorMessage
             }
         }
     }
@@ -116,5 +126,13 @@ abstract class BaseController @JvmOverloads constructor(
     private fun inflateLayout(@LayoutRes layout: Int, attachToRoot: Boolean = false): View {
         return LayoutInflater.from(context).inflate(layout, this, attachToRoot)
     }
+
+    fun getCoverView(): View = stateCoverView
+
+    fun getCompletionView(): View = stateCompletionView
+
+    fun getErrorView(): View = stateErrorView
+
+    fun getErrorMessage(): String = errorMessage
 
 }

@@ -10,22 +10,24 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/play_error"
+        android:text="@string/player_error"
         android:textColor="#FFFFFF"
         android:textSize="14sp" />
 
     <TextView
+        android:id="@+id/default_error_message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="3dp"
         android:gravity="center_horizontal"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
-        android:text="@string/play_error"
+        android:text="@string/player_error"
         android:textColor="#FFFFFF"
         android:textSize="12sp" />
 
     <TextView
+        android:id="@+id/default_error_retry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
@@ -36,7 +38,7 @@
         android:paddingTop="4dp"
         android:paddingEnd="14dp"
         android:paddingBottom="4dp"
-        android:text="@string/play_retry"
+        android:text="@string/player_retry"
         android:textColor="#666666"
         android:textSize="14sp"
         app:drawableStartCompat="@drawable/ic_action_refresh" />

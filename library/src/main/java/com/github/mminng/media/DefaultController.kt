@@ -8,6 +8,7 @@ import android.widget.SeekBar
 import android.widget.TextView
 import com.github.mminng.media.controller.BaseController
 import com.github.mminng.media.utils.convertMillis
+import com.squareup.picasso.Picasso
 
 /**
  * Created by zh on 2021/9/20.
@@ -44,6 +45,29 @@ class DefaultController @JvmOverloads constructor(
         playPauseView.setOnClickListener(this)
         fullScreen.setOnClickListener(this)
         timeBar.setOnSeekBarChangeListener(this)
+        val coverView: View = getCoverView()
+        val completionView: View = getCompletionView()
+        val errorView: View = getErrorView()
+        val play = coverView.findViewById<ImageView>(R.id.default_cover_play)
+        val cover = coverView.findViewById<ImageView>(R.id.default_cover_imageview)
+        val replay = completionView.findViewById<TextView>(R.id.default_completion_replay)
+        val errorMessage = errorView.findViewById<TextView>(R.id.default_error_message)
+        val retry = errorView.findViewById<TextView>(R.id.default_error_retry)
+        Picasso.get().load("https://img1.baidu.com/it/u=1438323812,1496169743&fm=26&fmt=auto")
+            .into(cover)
+        play.setOnClickListener {
+            coverView.visibility = GONE
+            controllerListener?.onPrepareAsync()
+        }
+        replay.setOnClickListener {
+            completionView.visibility = GONE
+            controllerListener?.onReplay()
+        }
+        errorMessage.text = getErrorMessage()
+        retry.setOnClickListener {
+            errorView.visibility = GONE
+            controllerListener?.onRetry()
+        }
     }
 
     override fun onStartTrackingTouch(seekBar: SeekBar?) {

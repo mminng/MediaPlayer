@@ -10,11 +10,12 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/play_completion"
+        android:text="@string/player_completion"
         android:textColor="#FFFFFF"
         android:textSize="14sp" />
 
     <TextView
+        android:id="@+id/default_completion_replay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
@@ -25,7 +26,7 @@
         android:paddingTop="4dp"
         android:paddingEnd="14dp"
         android:paddingBottom="4dp"
-        android:text="@string/replay"
+        android:text="@string/player_replay"
         android:textColor="#666666"
         android:textSize="14sp"
         app:drawableStartCompat="@drawable/ic_action_refresh" />

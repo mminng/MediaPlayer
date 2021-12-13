@@ -14,10 +14,6 @@ abstract class BasePlayer : Player {
         _playerListener?.onVideoSizeChanged(width, height)
     }
 
-    override fun playerStateChanged(state: PlayerState) {
-        _playerStateListener?.onPlayerStateChanged(state)
-    }
-
     override fun bufferingUpdate(bufferingProgress: Int) {
         _playerListener?.onBufferingUpdate(bufferingProgress)
     }
@@ -35,11 +31,11 @@ abstract class BasePlayer : Player {
     }
 
     override fun completion() {
-        _playerStateListener?.onPlayerStateChanged(PlayerState.COMPLETED)
+        _playerStateListener?.onPlayerStateChanged(PlayerState.COMPLETION)
     }
 
-    override fun error(message: String) {
-        _playerStateListener?.onPlayerStateChanged(PlayerState.ERROR, message)
+    override fun error(errorMessage: String) {
+        _playerStateListener?.onPlayerStateChanged(PlayerState.ERROR, errorMessage)
     }
 
     override fun setOnPlayerListener(listener: Player.OnPlayerListener) {

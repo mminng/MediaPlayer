@@ -4,8 +4,6 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.Surface
-import android.view.Window
-import android.view.WindowManager
 import android.widget.FrameLayout
 import com.github.mminng.media.controller.Controller
 import com.github.mminng.media.player.Player
@@ -29,9 +27,12 @@ class PlayerView @JvmOverloads constructor(
     private var _player: Player? = null
     private var _controller: Controller? = null
 
+    private var _currentDataSource: String = ""
+
     private var onFullScreenModeChangedListener: (() -> Unit)? = null
 
     init {
+        onPlayerStateChanged(PlayerState.IDLE)
         context.theme.obtainStyledAttributes(attrs, R.styleable.PlayerView, 0, 0).apply {
             try {
                 val renderType = getInt(R.styleable.PlayerView_renderType, 0)
@@ -52,24 +53,6 @@ class PlayerView @JvmOverloads constructor(
         _renderer.setCallback(this)
     }
 
-    override fun onPlayPause() {
-        _player?.let {
-            if (it.isPlaying()) {
-                it.pause()
-                keepScreenOn = false
-                d("keepScreenOff")
-                _controller?.stopProgress()
-                _controller?.onPlayPause(false)
-            } else {
-                it.start()
-                keepScreenOn = true
-                d("keepScreenOn")
-                _controller?.updateProgress()
-                _controller?.onPlayPause(true)
-            }
-        }
-    }
-
     override fun onFullScreen() {
         onFullScreenModeChangedListener?.invoke()
     }
@@ -84,78 +67,53 @@ class PlayerView @JvmOverloads constructor(
         }
     }
 
-    override fun onPlayerStateChanged(state: PlayerState, error: String) {
-        when (state) {
-            PlayerState.IDLE -> {
-                d("IDLE")
-            }
-            PlayerState.BUFFERING -> {
-                d("BUFFERING")
-            }
-            PlayerState.BUFFERED -> {
-                d("BUFFERED")
-            }
-            PlayerState.PREPARED -> {
-                d("PREPARED")
-            }
-            PlayerState.STARTED -> {
-                d("STARTED")
-            }
-            PlayerState.PAUSED -> {
-                d("PAUSED")
-            }
-            PlayerState.COMPLETED -> {
-                d("COMPLETED")
-            }
-            PlayerState.ERROR -> {
-                d("ERROR=$error")
-            }
-        }
-        _controller?.setStateView(state, error)
-        _player?.let {
-            _controller?.onPlayPause(it.isPlaying())
-            if (it.isPlaying()) {
-                keepScreenOn = true
-                d("keepScreenOn")
-            } else {
-                keepScreenOn = false
-                d("keepScreenOff")
-            }
-        }
-    }
-
-    override fun onVideoSizeChanged(width: Int, height: Int) {
-        d("width=$width")
-        d("height=$height")
-        _controller?.updateProgress()
-        _renderer.setAspectRatio(width.toFloat() / height.toFloat())
-        _player?.let { _controller?.onDuration(it.getDuration()) }
-    }
-
-    override fun onBufferingUpdate(bufferingProgress: Int) {
-        _controller?.onBufferingProgressUpdate(bufferingProgress)
-    }
-
     fun setDataSource(source: String) {
-        _player?.let {
-            it.setDataSource(source)
-            it.prepareAsync()
-        }
+        _currentDataSource = source
+        _player?.setDataSource(source)
+        onPlayerStateChanged(PlayerState.INITIALIZED)
+    }
+
+    fun prepareAsync() {
+        _player?.prepareAsync()
+        onPlayerStateChanged(PlayerState.PREPARING)
     }
 
     fun start() {
         _player?.start()
+        _controller?.updateProgress()
+        _controller?.onPlayPause(true)
+        onPlayerStateChanged(PlayerState.STARTED)
     }
 
     fun pause() {
         _player?.pause()
+        _controller?.stopProgress()
+        _controller?.onPlayPause(false)
+        onPlayerStateChanged(PlayerState.PAUSED)
     }
 
-    fun isPlaying(): Boolean {
+    override fun onPrepareAsync() {
+        prepareAsync()
+    }
+
+    override fun onPlayPause() {
         _player?.let {
-            return it.isPlaying()
+            if (it.isPlaying()) {
+                pause()
+            } else {
+                start()
+            }
         }
-        return false
+    }
+
+    override fun onReplay() {
+        start()
+    }
+
+    override fun onRetry() {
+        reset()
+        setDataSource(_currentDataSource)
+        prepareAsync()
     }
 
     fun release() {
@@ -164,12 +122,69 @@ class PlayerView @JvmOverloads constructor(
         d("player release")
     }
 
-    fun setOnFullScreenModeChangedListener(listener: () -> Unit) {
-        this.onFullScreenModeChangedListener = listener
+    override fun onRenderCreated(surface: Surface) {
+        _player?.setSurface(surface)
     }
 
-    fun setRenderMode(mode: RenderMode) {
-        _renderer.setRenderMode(mode)
+    override fun onRenderChanged(width: Int, height: Int) {
+    }
+
+    override fun onRenderDestroyed() {
+    }
+
+    override fun onVideoSizeChanged(width: Int, height: Int) {
+        d("video_width:$width")
+        d("video_height:$height")
+        _renderer.setAspectRatio(width.toFloat() / height.toFloat())
+    }
+
+    override fun onBufferingUpdate(bufferingProgress: Int) {
+        d("bufferingProgress:$bufferingProgress")
+        _controller?.onBufferingProgressUpdate(bufferingProgress)
+    }
+
+    override fun onPlayerStateChanged(state: PlayerState, errorMessage: String) {
+        _controller?.setControllerState(state, errorMessage)
+        _player?.let {
+            keepScreenOn = it.isPlaying()
+        }
+        when (state) {
+            PlayerState.IDLE -> {
+                d("STATE IDLE")
+            }
+            PlayerState.INITIALIZED -> {
+                d("STATE INITIALIZED")
+            }
+            PlayerState.PREPARING -> {
+                d("STATE PREPARING")
+            }
+            PlayerState.PREPARED -> {
+                d("STATE PREPARED")
+                start()
+            }
+            PlayerState.BUFFERING -> {
+                d("STATE BUFFERING")
+            }
+            PlayerState.BUFFERED -> {
+                d("STATE BUFFERED")
+            }
+            PlayerState.STARTED -> {
+                d("STATE STARTED")
+            }
+            PlayerState.PAUSED -> {
+                d("STATE PAUSED")
+            }
+            PlayerState.COMPLETION -> {
+                d("STATE COMPLETED")
+                _controller?.stopProgress()
+                _controller?.onPlayPause(false)
+            }
+            PlayerState.ERROR -> {
+                d("STATE ERROR:$errorMessage")
+                _controller?.stopProgress()
+                _controller?.onPlayPause(false)
+            }
+        }
     }
 
     fun setPlayer(player: Player) {
@@ -188,14 +203,17 @@ class PlayerView @JvmOverloads constructor(
         }
     }
 
-    override fun onRenderCreated(surface: Surface) {
-        _player?.setSurface(surface)
+    fun setRenderMode(mode: RenderMode) {
+        _renderer.setRenderMode(mode)
     }
 
-    override fun onRenderChanged(width: Int, height: Int) {
+    fun setOnFullScreenModeChangedListener(listener: () -> Unit) {
+        this.onFullScreenModeChangedListener = listener
     }
 
-    override fun onRenderDestroyed() {
+    fun reset() {
+        _player?.reset()
+        onPlayerStateChanged(PlayerState.IDLE)
     }
 
     override fun onDetachedFromWindow() {

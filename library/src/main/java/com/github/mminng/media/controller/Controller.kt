@@ -26,19 +26,25 @@ interface Controller {
 
     fun stopProgress()
 
-    fun setStateView(state: PlayerState, errorMessage: String)
+    fun setControllerState(state: PlayerState, errorMessage: String = "")
 
+    @LayoutRes
     fun setCoverView(): Int
 
+    @LayoutRes
     fun setBufferingView(): Int
 
+    @LayoutRes
     fun setCompletionView(): Int
 
+    @LayoutRes
     fun setErrorView(): Int
 
     fun setOnControllerListener(listener: OnControllerListener)
 
     interface OnControllerListener {
+
+        fun onPrepareAsync()
 
         fun onPlayPause()
 
@@ -47,6 +53,10 @@ interface Controller {
         fun onSeekTo(position: Int)
 
         fun onProgressUpdate()
+
+        fun onReplay()
+
+        fun onRetry()
     }
 
 }
