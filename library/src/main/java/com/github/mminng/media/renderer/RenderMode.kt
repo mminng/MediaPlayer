@@ -8,5 +8,6 @@ sealed class RenderMode {
     object FIT : RenderMode()
     object FILL : RenderMode()
     object ZOOM : RenderMode()
+    object DEFAULT : RenderMode()
 
 }

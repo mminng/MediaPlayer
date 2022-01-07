@@ -1,7 +1,5 @@
 package com.github.mminng.media.player
 
-import com.github.mminng.media.player.state.PlayerState
-
 /**
  * Created by zh on 2021/12/10.
  */
@@ -14,31 +12,51 @@ abstract class BasePlayer : Player {
         _playerListener?.onVideoSizeChanged(width, height)
     }
 
-    override fun bufferingUpdate(bufferingProgress: Int) {
-        _playerListener?.onBufferingUpdate(bufferingProgress)
+    override fun bufferingUpdate(bufferingPosition: Int) {
+        _playerListener?.onBufferingUpdate(bufferingPosition)
     }
 
-    override fun prepared() {
+    override fun stateIdle() {
+        _playerStateListener?.onPlayerStateChanged(PlayerState.IDLE)
+    }
+
+    override fun stateInitialized() {
+        _playerStateListener?.onPlayerStateChanged(PlayerState.INITIALIZED)
+    }
+
+    override fun statePreparing() {
+        _playerStateListener?.onPlayerStateChanged(PlayerState.PREPARING)
+    }
+
+    override fun statePrepared() {
         _playerStateListener?.onPlayerStateChanged(PlayerState.PREPARED)
     }
 
-    override fun bufferingStart() {
+    override fun stateBufferingStart() {
         _playerStateListener?.onPlayerStateChanged(PlayerState.BUFFERING)
     }
 
-    override fun bufferingEnd() {
+    override fun stateBufferingEnd() {
         _playerStateListener?.onPlayerStateChanged(PlayerState.BUFFERED)
     }
 
-    override fun renderingStart() {
+    override fun stateRenderingStart() {
         _playerStateListener?.onPlayerStateChanged(PlayerState.RENDERING)
     }
 
-    override fun completion() {
+    override fun stateStarted() {
+        _playerStateListener?.onPlayerStateChanged(PlayerState.STARTED)
+    }
+
+    override fun statePaused() {
+        _playerStateListener?.onPlayerStateChanged(PlayerState.PAUSED)
+    }
+
+    override fun stateCompletion() {
         _playerStateListener?.onPlayerStateChanged(PlayerState.COMPLETION)
     }
 
-    override fun error(errorMessage: String) {
+    override fun stateError(errorMessage: String) {
         _playerStateListener?.onPlayerStateChanged(PlayerState.ERROR, errorMessage)
     }
 

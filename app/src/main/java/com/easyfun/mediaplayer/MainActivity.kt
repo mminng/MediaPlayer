@@ -4,20 +4,25 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
+import android.view.WindowInsetsController
 import android.widget.Button
 import android.widget.Toast
+import androidx.core.view.ViewCompat
 import com.github.mminng.media.DefaultPlayer
 import com.github.mminng.media.PlayerView
 import com.github.mminng.media.DefaultController
-import com.github.mminng.media.player.state.PlayerState
 import com.github.mminng.media.renderer.RenderMode
+import com.squareup.picasso.Picasso
 
 class MainActivity : AppCompatActivity() {
 
     private val localPath: String =
-        "/storage/emulated/0/Download/Movie/bilibili_2051251897.mp4"
+        "/storage/emulated/0/Quark/Download/bilibili_2051251897.mp4"
+    private val localPath2: String =
+        "/storage/emulated/0/Quark/Download/bilibili_932148655.mp4"
+    private val localPath3: String =
+        "/storage/emulated/0/Download/k4.mp4"
 
     private val playerView: PlayerView by lazy {
         findViewById(R.id.player_view)
@@ -30,6 +35,9 @@ class MainActivity : AppCompatActivity() {
     }
     private val renderMode2: Button by lazy {
         findViewById(R.id.button2)
+    }
+    private val renderMode3: Button by lazy {
+        findViewById(R.id.button3)
     }
     private val controller: Button by lazy {
         findViewById(R.id.controller)
@@ -47,21 +55,19 @@ class MainActivity : AppCompatActivity() {
         val controllerView = DefaultController(this)
         val controllerView1 = MyControllerView(this)
         playerView.setPlayer(DefaultPlayer())
-//        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/09/30/mp4/210930112954504189.mp4")
+        playerView.setController(controllerView)
 //        playerView.setDataSource(localPath)
+        playerView.setDataSource(localPath3)
 //        playerView.setDataSource("https://v.96koo.net/common/LzQxOTAvcmVsZWFzZS8yMDIwMDczMC9ETTRCV0cyV3llL0RNNEJXRzJXeWVfODQ4XzgwMA==_19929.m3u8")
-//        playerView.setDataSource("https://vfx.mtime.cn/Video/2020/09/03/mp4/200903192102416527.mp4")
-//        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/01/07/mp4/210107172407759182.mp4")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/12/05/mp4/211205092838969197.mp4")
-        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/12/10/mp4/211210143103622104.mp4")
-        playerView.setOnFullScreenModeChangedListener {
-            requestedOrientation =
-                if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE) {
-                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-                } else {
-                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                }
+//        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/12/10/mp4/211210143103622104.mp4")
+//        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/12/15/mp4/211215163524157166.mp4")
+        playerView.prepare(true)
+        playerView.setCover {
+            Picasso.get()
+                .load("https://images.unsplash.com/photo-1634334181759-a965220b6a91?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHx0b3BpYy1mZWVkfDExfGJEbzQ4Y1Vod25ZfHxlbnwwfHx8fA%3D%3D&auto=format&fit=crop&w=500&q=60")
+                .into(it)
         }
         renderMode.setOnClickListener {
             playerView.setRenderMode(RenderMode.FIT)
@@ -71,6 +77,9 @@ class MainActivity : AppCompatActivity() {
         }
         renderMode2.setOnClickListener {
             playerView.setRenderMode(RenderMode.ZOOM)
+        }
+        renderMode3.setOnClickListener {
+            playerView.setRenderMode(RenderMode.DEFAULT)
         }
         controller.setOnClickListener {
             playerView.setController(controllerView)
@@ -85,15 +94,23 @@ class MainActivity : AppCompatActivity() {
                 Toast.LENGTH_SHORT
             ).show()
         }
+        playerView.setOnFullScreenModeChangedListener {
+            requestedOrientation =
+                if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE) {
+                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                } else {
+                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                }
+        }
     }
 
     override fun onResume() {
         super.onResume()
-//        playerView.start()
+        playerView.start()
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onStop() {
+        super.onStop()
         playerView.pause()
     }
 
@@ -111,14 +128,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        playerView.requestFocus()
-        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            hideSystemUI()
-        }
-    }
-
     private fun hideSystemUI() {
         // Enables regular immersive mode.
         // For "lean back" mode, remove SYSTEM_UI_FLAG_IMMERSIVE.
@@ -127,7 +136,7 @@ class MainActivity : AppCompatActivity() {
                 View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                         // Set the content to appear under the system bars so that the
                         // content doesn't resize when the system bars hide and show.
-                        or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+//                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                         // Hide the nav bar and status bar
@@ -140,10 +149,9 @@ class MainActivity : AppCompatActivity() {
     // except for the ones that make the content appear under the system bars.
     private fun showSystemUI() {
         window.decorView.systemUiVisibility = (
-                View.SYSTEM_UI_FLAG_VISIBLE
-//                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-//                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-//                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                 )
     }
 

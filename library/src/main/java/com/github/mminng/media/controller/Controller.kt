@@ -1,9 +1,9 @@
 package com.github.mminng.media.controller
 
 import android.view.View
+import android.widget.ImageView
 import androidx.annotation.LayoutRes
-import com.github.mminng.media.R
-import com.github.mminng.media.player.state.PlayerState
+import com.github.mminng.media.player.PlayerState
 
 /**
  * Created by zh on 2021/10/1.
@@ -12,21 +12,17 @@ interface Controller {
 
     fun onPlayPause(isPlaying: Boolean)
 
-    fun onFullScreen(isFullScreen: Boolean)
-
     fun onDuration(duration: Int)
 
-    fun onProgressUpdate(progress: Int)
+    fun onCurrentPosition(position: Int)
 
-    fun onBufferingProgressUpdate(bufferingProgress: Int)
+    fun onCurrentBufferingPosition(bufferingPosition: Int)
+
+    fun onFullScreen(isFullScreen: Boolean)
 
     fun getView(): View
 
-    fun updateProgress()
-
-    fun stopProgress()
-
-    fun setControllerState(state: PlayerState, errorMessage: String = "")
+    fun onPlayerStateChanged(state: PlayerState, errorMessage: String = "none")
 
     @LayoutRes
     fun setCoverView(): Int
@@ -40,19 +36,37 @@ interface Controller {
     @LayoutRes
     fun setErrorView(): Int
 
+    fun bindCoverImage(view: ImageView)
+
+    fun setCoverViewEnable(enable: Boolean)
+
+    fun setCompletionViewEnable(enable: Boolean)
+
+    fun setErrorViewEnable(enable: Boolean)
+
+    fun updatePosition()
+
+    fun stopUpdatePosition()
+
+    fun onPlayerError(errorMessage: String)
+
+    fun isControllerReady(): Boolean
+
     fun setOnControllerListener(listener: OnControllerListener)
 
     interface OnControllerListener {
 
-        fun onPrepareAsync()
+        fun onBindCoverImage(view: ImageView)
 
-        fun onPlayPause()
+        fun prepare(playWhenPrepared: Boolean = false)
+
+        fun onPlayPause(pauseFromUser: Boolean = false)
 
         fun onFullScreen()
 
         fun onSeekTo(position: Int)
 
-        fun onProgressUpdate()
+        fun onPositionUpdated()
 
         fun onReplay()
 

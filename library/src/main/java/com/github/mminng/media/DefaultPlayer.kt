@@ -3,7 +3,8 @@ package com.github.mminng.media
 import android.media.MediaPlayer
 import android.view.Surface
 import com.github.mminng.media.player.BasePlayer
-import com.github.mminng.media.player.state.PlayerState
+import com.github.mminng.media.player.PlayerState
+import com.github.mminng.media.utils.d
 
 /**
  * Created by zh on 2021/10/2.
@@ -25,7 +26,7 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
 
     /*MediaPlayer callback*/
     override fun onPrepared(mp: MediaPlayer?) {
-        prepared()
+        statePrepared()
     }
 
     override fun onVideoSizeChanged(mp: MediaPlayer?, width: Int, height: Int) {
@@ -33,26 +34,26 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
     }
 
     override fun onBufferingUpdate(mp: MediaPlayer?, percent: Int) {
-        if (getPlayerState() != PlayerState.IDLE &&
-            getPlayerState() != PlayerState.INITIALIZED &&
-            getPlayerState() != PlayerState.ERROR
-        ) {
-            mp?.let {
-                bufferingUpdate(mp.duration / 100 * percent)
-            }
+        if (getPlayerState() == PlayerState.IDLE ||
+            getPlayerState() == PlayerState.INITIALIZED ||
+            getPlayerState() == PlayerState.ERROR
+        ) return
+        mp?.let {
+            bufferingUpdate(it.duration * percent / 100)
+            d("buffering:${it.duration * percent / 100}")
         }
     }
 
     override fun onInfo(mp: MediaPlayer?, what: Int, extra: Int): Boolean {
         when (what) {
             MediaPlayer.MEDIA_INFO_BUFFERING_START -> {
-                bufferingStart()
+                stateBufferingStart()
             }
             MediaPlayer.MEDIA_INFO_BUFFERING_END -> {
-                bufferingEnd()
+                stateBufferingEnd()
             }
             MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START -> {
-                renderingStart()
+                stateRenderingStart()
             }
         }
         return false
@@ -60,27 +61,30 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
 
     override fun onError(mp: MediaPlayer?, what: Int, extra: Int): Boolean {
         when (extra) {
+            MediaPlayer.MEDIA_ERROR_SERVER_DIED -> {
+                stateError("MEDIA_ERROR_SERVER_DIED($what,$extra)")
+            }
             MediaPlayer.MEDIA_ERROR_IO -> {
-                error("MEDIA_ERROR_IO")
+                stateError("MEDIA_ERROR_IO($what,$extra)")
             }
             MediaPlayer.MEDIA_ERROR_MALFORMED -> {
-                error("MEDIA_ERROR_MALFORMED")
+                stateError("MEDIA_ERROR_MALFORMED($what,$extra)")
             }
             MediaPlayer.MEDIA_ERROR_UNSUPPORTED -> {
-                error("MEDIA_ERROR_UNSUPPORTED")
+                stateError("MEDIA_ERROR_UNSUPPORTED($what,$extra)")
             }
             MediaPlayer.MEDIA_ERROR_TIMED_OUT -> {
-                error("MEDIA_ERROR_TIMED_OUT")
+                stateError("MEDIA_ERROR_TIMED_OUT($what,$extra)")
             }
             else -> {
-                error("MEDIA_ERROR_UNKNOWN")
+                stateError("MEDIA_ERROR_UNKNOWN($what,$extra)")
             }
         }
         return true
     }
 
     override fun onCompletion(mp: MediaPlayer?) {
-        completion()
+        stateCompletion()
     }
     /*MediaPlayer callback end*/
 
@@ -88,7 +92,7 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
         player.setDataSource(source)
     }
 
-    override fun prepareAsync() {
+    override fun prepare() {
         player.prepareAsync()
     }
 
@@ -104,7 +108,7 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
         player.seekTo(position)
     }
 
-    override fun setSurface(surface: Surface) {
+    override fun setSurface(surface: Surface?) {
         player.setSurface(surface)
     }
 

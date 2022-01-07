@@ -1,5 +1,6 @@
 package com.github.mminng.media.utils
 
+import com.github.mminng.media.renderer.RenderMode
 import java.util.*
 import kotlin.math.abs
 

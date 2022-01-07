@@ -8,7 +8,6 @@ import android.widget.SeekBar
 import android.widget.TextView
 import com.github.mminng.media.controller.BaseController
 import com.github.mminng.media.utils.convertMillis
-import com.squareup.picasso.Picasso
 
 /**
  * Created by zh on 2021/9/20.
@@ -30,11 +29,14 @@ class DefaultController @JvmOverloads constructor(
     private val durationView: TextView by lazy {
         findViewById(R.id.media_duration)
     }
-    private val fullScreen: ImageView by lazy {
+    private val fullScreenView: ImageView by lazy {
         findViewById(R.id.media_fullScreen)
     }
+    private val errorText: TextView by lazy {
+        getErrorView().findViewById(R.id.default_error_message)
+    }
 
-    private var seekFromUser: Boolean = false
+    private var _seekFromUser: Boolean = false
 
     override fun setControllerLayout(): Int {
         return R.layout.default_controller_layout
@@ -43,35 +45,15 @@ class DefaultController @JvmOverloads constructor(
     override fun onLayoutCreated(view: View) {
         //also you can do findViewById() here
         playPauseView.setOnClickListener(this)
-        fullScreen.setOnClickListener(this)
+        fullScreenView.setOnClickListener(this)
         timeBar.setOnSeekBarChangeListener(this)
-        val coverView: View = getCoverView()
-        val completionView: View = getCompletionView()
-        val errorView: View = getErrorView()
-        val play = coverView.findViewById<ImageView>(R.id.default_cover_play)
-        val cover = coverView.findViewById<ImageView>(R.id.default_cover_imageview)
-        val replay = completionView.findViewById<TextView>(R.id.default_completion_replay)
-        val errorMessage = errorView.findViewById<TextView>(R.id.default_error_message)
-        val retry = errorView.findViewById<TextView>(R.id.default_error_retry)
-        Picasso.get().load("https://img1.baidu.com/it/u=1438323812,1496169743&fm=26&fmt=auto")
-            .into(cover)
-        play.setOnClickListener {
-            coverView.visibility = GONE
-            controllerListener?.onPrepareAsync()
-        }
-        replay.setOnClickListener {
-            completionView.visibility = GONE
-            controllerListener?.onReplay()
-        }
-        errorMessage.text = getErrorMessage()
-        retry.setOnClickListener {
-            errorView.visibility = GONE
-            controllerListener?.onRetry()
-        }
+        bindCoverView()
+        bindCompletionView()
+        bindErrorView()
     }
 
     override fun onStartTrackingTouch(seekBar: SeekBar?) {
-        seekFromUser = true
+        _seekFromUser = true
     }
 
     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -81,7 +63,7 @@ class DefaultController @JvmOverloads constructor(
     }
 
     override fun onStopTrackingTouch(seekBar: SeekBar?) {
-        seekFromUser = false
+        _seekFromUser = false
         seekBar?.let {
             controllerListener?.onSeekTo(it.progress)
         }
@@ -90,9 +72,9 @@ class DefaultController @JvmOverloads constructor(
     override fun onClick(v: View?) {
         when (v) {
             playPauseView -> {
-                controllerListener?.onPlayPause()
+                controllerListener?.onPlayPause(true)
             }
-            fullScreen -> {
+            fullScreenView -> {
                 controllerListener?.onFullScreen()
             }
             else -> {
@@ -111,9 +93,9 @@ class DefaultController @JvmOverloads constructor(
 
     override fun onFullScreen(isFullScreen: Boolean) {
         if (isFullScreen) {
-            fullScreen.setImageResource(R.drawable.ic_action_fullscreen_exit)
+            fullScreenView.setImageResource(R.drawable.ic_action_fullscreen_exit)
         } else {
-            fullScreen.setImageResource(R.drawable.ic_action_fullscreen)
+            fullScreenView.setImageResource(R.drawable.ic_action_fullscreen)
         }
     }
 
@@ -122,15 +104,45 @@ class DefaultController @JvmOverloads constructor(
         timeBar.max = duration
     }
 
-    override fun onProgressUpdate(progress: Int) {
-        if (!seekFromUser) {
-            positionView.text = convertMillis(progress)
-            timeBar.progress = progress
+    override fun onCurrentPosition(position: Int) {
+        if (!_seekFromUser) {
+            positionView.text = convertMillis(position)
+            timeBar.progress = position
         }
     }
 
-    override fun onBufferingProgressUpdate(bufferingProgress: Int) {
-        timeBar.secondaryProgress = bufferingProgress
+    override fun onCurrentBufferingPosition(bufferingPosition: Int) {
+        timeBar.secondaryProgress = bufferingPosition
+    }
+
+    override fun onPlayerError(errorMessage: String) {
+        errorText.text = errorMessage
+    }
+
+    private fun bindCoverView() {
+        val play: ImageView = getCoverView().findViewById(R.id.default_cover_play)
+        val cover: ImageView = getCoverView().findViewById(R.id.default_cover_imageview)
+        play.setOnClickListener {
+            getCoverView().visibility = GONE
+            controllerListener?.prepare(true)
+        }
+        bindCoverImage(cover)
+    }
+
+    private fun bindCompletionView() {
+        val replay: TextView = getCompletionView().findViewById(R.id.default_completion_replay)
+        replay.setOnClickListener {
+            getCompletionView().visibility = GONE
+            controllerListener?.onReplay()
+        }
+    }
+
+    private fun bindErrorView() {
+        val retry: TextView = getErrorView().findViewById(R.id.default_error_retry)
+        retry.setOnClickListener {
+            getErrorView().visibility = GONE
+            controllerListener?.onRetry()
+        }
     }
 
 }

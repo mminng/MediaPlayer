@@ -10,7 +10,7 @@ interface Renderer {
 
     fun setRenderMode(renderMode: RenderMode)
 
-    fun setAspectRatio(aspectRatio: Float)
+    fun setVideoSize(width: Float, height: Float)
 
     fun getView(): View
 

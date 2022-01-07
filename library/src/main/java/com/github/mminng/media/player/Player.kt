@@ -1,7 +1,6 @@
 package com.github.mminng.media.player
 
 import android.view.Surface
-import com.github.mminng.media.player.state.PlayerState
 
 /**
  * Created by zh on 2021/9/20.
@@ -10,15 +9,15 @@ interface Player {
 
     fun setDataSource(source: String)
 
-    fun prepareAsync()
-
-    fun start()
+    fun prepare()
 
     fun pause()
 
+    fun start()
+
     fun seekTo(position: Int)
 
-    fun setSurface(surface: Surface)
+    fun setSurface(surface: Surface?)
 
     fun reset()
 
@@ -40,30 +39,40 @@ interface Player {
 
         fun onVideoSizeChanged(width: Int, height: Int)
 
-        fun onBufferingUpdate(bufferingProgress: Int)
+        fun onBufferingUpdate(bufferingPosition: Int)
     }
 
     fun videoSizeChanged(width: Int, height: Int)
 
-    fun bufferingUpdate(bufferingProgress: Int)
+    fun bufferingUpdate(bufferingPosition: Int)
 
     interface OnPlayerStateListener {
 
-        fun onPlayerStateChanged(state: PlayerState, errorMessage: String = "")
+        fun onPlayerStateChanged(state: PlayerState, errorMessage: String = "none")
 
         fun getPlayerState(): PlayerState
     }
 
-    fun prepared()
+    fun stateIdle()
 
-    fun bufferingStart()
+    fun stateInitialized()
 
-    fun bufferingEnd()
+    fun statePreparing()
 
-    fun renderingStart()
+    fun statePrepared()
 
-    fun completion()
+    fun stateBufferingStart()
 
-    fun error(errorMessage: String)
+    fun stateBufferingEnd()
+
+    fun stateRenderingStart()
+
+    fun stateStarted()
+
+    fun statePaused()
+
+    fun stateCompletion()
+
+    fun stateError(errorMessage: String)
 
 }

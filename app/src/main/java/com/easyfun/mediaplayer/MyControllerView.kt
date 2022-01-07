@@ -66,7 +66,7 @@ class MyControllerView @JvmOverloads constructor(
     override fun onClick(v: View?) {
         when (v) {
             playPauseView -> {
-                controllerListener?.onPlayPause()
+                controllerListener?.onPlayPause(true)
             }
             fullScreen -> {
                 controllerListener?.onFullScreen()
@@ -93,19 +93,23 @@ class MyControllerView @JvmOverloads constructor(
         }
     }
 
+    override fun onPlayerError(errorMessage: String) {
+    }
+
     override fun onDuration(duration: Int) {
         durationView.text = convertMillis(duration)
         timeBar.max = duration
     }
 
-    override fun onProgressUpdate(progress: Int) {
+    override fun onCurrentPosition(position: Int) {
         if (!seekFromUser) {
-            positionView.text = convertMillis(progress)
-            timeBar.progress = progress
+            positionView.text = convertMillis(position)
+            timeBar.progress = position
         }
     }
 
-    override fun onBufferingProgressUpdate(bufferingProgress: Int) {
-        timeBar.secondaryProgress = bufferingProgress
+    override fun onCurrentBufferingPosition(bufferingPosition: Int) {
+        timeBar.secondaryProgress = bufferingPosition
     }
+
 }

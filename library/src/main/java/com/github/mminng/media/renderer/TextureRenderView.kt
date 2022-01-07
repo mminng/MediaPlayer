@@ -8,6 +8,7 @@ import android.view.TextureView
 import android.view.View
 import com.github.mminng.media.utils.d
 import kotlin.math.abs
+import kotlin.math.min
 
 /**
  * Created by zh on 2021/12/4.
@@ -16,7 +17,8 @@ class TextureRenderView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : TextureView(context, attrs), Renderer, TextureView.SurfaceTextureListener {
 
-    private var _aspectRatio: Float = 0.0F
+    private var _videoWidth: Float = 0.0F
+    private var _videoHeight: Float = 0.0F
     private var _renderMode: RenderMode = RenderMode.FIT
     private var _renderCallback: Renderer.OnRenderCallback? = null
     private var _surfaceTexture: SurfaceTexture? = null
@@ -30,29 +32,40 @@ class TextureRenderView @JvmOverloads constructor(
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        if (_aspectRatio <= 0) return
+        if (_videoWidth == 0.0F || _videoHeight == 0.0F) return
         var width: Float = measuredWidth.toFloat()
         var height: Float = measuredHeight.toFloat()
-        val currentAspectRatio: Float = width / height
-        val difference: Float = _aspectRatio / currentAspectRatio - 1
+        val viewAspectRatio: Float = width / height
+        val videoAspectRatio: Float = _videoWidth / _videoHeight
+        val difference: Float = videoAspectRatio / viewAspectRatio - 1
         if (abs(difference) <= 0.01F) return
+        val needBeWider: Boolean = videoAspectRatio > viewAspectRatio
         when (_renderMode) {
             RenderMode.FIT -> {
                 if (difference > 0) {
-                    height = width / _aspectRatio
+                    height = width / videoAspectRatio
                 } else {
-                    width = height * _aspectRatio
-                }
-            }
-            RenderMode.ZOOM -> {
-                if (difference > 0) {
-                    width = height * _aspectRatio
-                } else {
-                    height = width / _aspectRatio
+                    width = height * videoAspectRatio
                 }
             }
             RenderMode.FILL -> {
                 //do nothing
+            }
+            RenderMode.ZOOM -> {
+                if (difference > 0) {
+                    width = height * videoAspectRatio
+                } else {
+                    height = width / videoAspectRatio
+                }
+            }
+            RenderMode.DEFAULT -> {
+                if (needBeWider) {
+                    width = min(_videoWidth, width)
+                    height = width / videoAspectRatio
+                } else {
+                    height = min(_videoHeight, height)
+                    width = height * videoAspectRatio
+                }
             }
         }
         super.onMeasure(
@@ -68,9 +81,10 @@ class TextureRenderView @JvmOverloads constructor(
         }
     }
 
-    override fun setAspectRatio(aspectRatio: Float) {
-        if (_aspectRatio != aspectRatio) {
-            _aspectRatio = aspectRatio
+    override fun setVideoSize(width: Float, height: Float) {
+        if (_videoWidth != width || _videoHeight != height) {
+            _videoWidth = width
+            _videoHeight = height
             requestLayout()
         }
     }

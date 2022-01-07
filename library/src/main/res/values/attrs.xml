@@ -6,6 +6,9 @@
             <enum name="surface" value="0" />
             <enum name="texture" value="1" />
         </attr>
+        <attr name="coverViewEnable" format="boolean" />
+        <attr name="completionViewEnable" format="boolean" />
+        <attr name="errorViewEnable" format="boolean" />
     </declare-styleable>
 
 </resources>
