@@ -1,11 +1,17 @@
 package com.github.mminng.media
 
+import android.app.Activity
 import android.content.Context
+import android.content.res.Configuration
+import android.graphics.Color
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.Surface
+import android.view.View
+import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ImageView
+import androidx.appcompat.app.AppCompatActivity
 import com.github.mminng.media.controller.Controller
 import com.github.mminng.media.player.Player
 import com.github.mminng.media.player.PlayerState
@@ -14,6 +20,7 @@ import com.github.mminng.media.renderer.Renderer
 import com.github.mminng.media.renderer.SurfaceRenderView
 import com.github.mminng.media.renderer.TextureRenderView
 import com.github.mminng.media.utils.d
+import com.github.mminng.media.utils.e
 
 /**
  * Created by zh on 2021/10/1.
@@ -44,6 +51,8 @@ class PlayerView @JvmOverloads constructor(
     private var _currentDataSource: String = ""
     private var _currentRetryPosition: Int = 0
 
+    val activity: AppCompatActivity = context as AppCompatActivity
+
     init {
         context.theme.obtainStyledAttributes(attrs, R.styleable.PlayerView, 0, 0).apply {
             try {
@@ -69,6 +78,22 @@ class PlayerView @JvmOverloads constructor(
             )
         )
         _renderer.setCallback(this)
+        setBackgroundColor(Color.BLACK)
+    }
+
+    override fun onVisibilityChanged(changedView: View, visibility: Int) {
+        super.onVisibilityChanged(changedView, visibility)
+        if (visibility == VISIBLE && resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            e("onVisibilityChanged=$visibility")
+        }
+    }
+
+    override fun onVisibilityAggregated(isVisible: Boolean) {
+        super.onVisibilityAggregated(isVisible)
+    }
+
+    override fun onWindowVisibilityChanged(visibility: Int) {
+        super.onWindowVisibilityChanged(visibility)
     }
 
     override fun onRenderCreated(surface: Surface) {
@@ -311,10 +336,5 @@ class PlayerView @JvmOverloads constructor(
         d("player release")
     }
     /*public function end*/
-
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        _renderer.release()
-    }
 
 }

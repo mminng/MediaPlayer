@@ -1,17 +1,25 @@
 package com.easyfun.mediaplayer
 
+import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
-import androidx.appcompat.app.AppCompatActivity
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.util.Log
 import android.view.View
-import android.view.WindowInsetsController
+import android.view.ViewGroup
+import android.view.Window
+import android.view.WindowManager
+import android.view.animation.Transformation
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.Toast
-import androidx.core.view.ViewCompat
+import androidx.appcompat.app.AppCompatActivity
+import androidx.transition.TransitionManager
+import com.github.mminng.media.DefaultController
 import com.github.mminng.media.DefaultPlayer
 import com.github.mminng.media.PlayerView
-import com.github.mminng.media.DefaultController
 import com.github.mminng.media.renderer.RenderMode
 import com.squareup.picasso.Picasso
 
@@ -22,7 +30,9 @@ class MainActivity : AppCompatActivity() {
     private val localPath2: String =
         "/storage/emulated/0/Quark/Download/bilibili_932148655.mp4"
     private val localPath3: String =
-        "/storage/emulated/0/Download/k4.mp4"
+        "/storage/emulated/0/Download/4k.mp4"
+    private val localPath4: String =
+        "/storage/emulated/0/Download/60fps_1080p.mp4"
 
     private val playerView: PlayerView by lazy {
         findViewById(R.id.player_view)
@@ -49,15 +59,24 @@ class MainActivity : AppCompatActivity() {
         findViewById(R.id.getState)
     }
 
+    private val playerContent: FrameLayout by lazy {
+        findViewById(R.id.player_content)
+    }
+
+    var testP: Boolean = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val controllerView = DefaultController(this)
         val controllerView1 = MyControllerView(this)
-        playerView.setPlayer(DefaultPlayer())
+        val player = DefaultPlayer()
+        playerView.setPlayer(player)
         playerView.setController(controllerView)
 //        playerView.setDataSource(localPath)
+//        playerView.setDataSource(localPath2)
         playerView.setDataSource(localPath3)
+//        playerView.setDataSource(localPath4)
 //        playerView.setDataSource("https://v.96koo.net/common/LzQxOTAvcmVsZWFzZS8yMDIwMDczMC9ETTRCV0cyV3llL0RNNEJXRzJXeWVfODQ4XzgwMA==_19929.m3u8")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/12/05/mp4/211205092838969197.mp4")
@@ -94,13 +113,43 @@ class MainActivity : AppCompatActivity() {
                 Toast.LENGTH_SHORT
             ).show()
         }
+        val contentView: ViewGroup = findViewById(Window.ID_ANDROID_CONTENT)
+        val layoutParams = playerView.layoutParams
         playerView.setOnFullScreenModeChangedListener {
-            requestedOrientation =
-                if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE) {
-                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-                } else {
-                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                }
+//            if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE) {
+//                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+//                contentView.removeView(playerView)
+//                playerContent.addView(playerView, layoutParams)
+//                setDecorVisible(this)
+//            } else {
+//                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+//                playerContent.removeView(playerView)
+//                contentView.addView(
+//                    playerView, FrameLayout.LayoutParams(
+//                        FrameLayout.LayoutParams.MATCH_PARENT,
+//                        FrameLayout.LayoutParams.MATCH_PARENT
+//                    )
+//                )
+//                hideStatusBar(this)
+//                hideNavigationBar(this)
+//            }
+            if (testP) {
+                testP = false
+                playerContent.removeView(playerView)
+                contentView.addView(
+                    playerView, FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT
+                    )
+                )
+                hideStatusBar(this@MainActivity)
+                hideNavigationBar(this@MainActivity)
+            } else {
+                testP = true
+                contentView.removeView(playerView)
+                playerContent.addView(playerView, layoutParams)
+                setDecorVisible(this@MainActivity)
+            }
         }
     }
 
@@ -122,37 +171,52 @@ class MainActivity : AppCompatActivity() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            hideSystemUI()
+            hideStatusBar(this)
+            hideNavigationBar(this)
         } else {
-            showSystemUI()
+            setDecorVisible(this)
         }
     }
 
-    private fun hideSystemUI() {
-        // Enables regular immersive mode.
-        // For "lean back" mode, remove SYSTEM_UI_FLAG_IMMERSIVE.
-        // Or for "sticky immersive," replace it with SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-        window.decorView.systemUiVisibility = (
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                        // Set the content to appear under the system bars so that the
-                        // content doesn't resize when the system bars hide and show.
-//                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        // Hide the nav bar and status bar
-                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        or View.SYSTEM_UI_FLAG_FULLSCREEN
-                )
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && !testP) {
+            hideStatusBar(this)
+            hideNavigationBar(this)
+        }
     }
 
-    // Shows the system bars by removing all the flags
-    // except for the ones that make the content appear under the system bars.
-    private fun showSystemUI() {
-        window.decorView.systemUiVisibility = (
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                )
+    fun hideStatusBar(activity: Activity) {
+        activity.window.setFlags(
+            WindowManager.LayoutParams.FLAG_FULLSCREEN,
+            WindowManager.LayoutParams.FLAG_FULLSCREEN
+        )
+        val decorView = activity.window.decorView
+        val uiOptions = (View.SYSTEM_UI_FLAG_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+        decorView.systemUiVisibility = uiOptions
+        supportActionBar?.let {
+            it.setShowHideAnimationEnabled(false)
+            it.hide()
+        }
+    }
+
+    fun hideNavigationBar(activity: Activity) {
+        val uiOptions = activity.window.decorView.systemUiVisibility
+        activity.window.decorView.systemUiVisibility =
+            uiOptions or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+    }
+
+    fun setDecorVisible(activity: Activity) {
+        activity.window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        val decorView = activity.window.decorView
+        val uiOptions = View.SYSTEM_UI_FLAG_VISIBLE
+        decorView.systemUiVisibility = uiOptions
+        supportActionBar?.let {
+            it.setShowHideAnimationEnabled(false)
+            it.show()
+        }
     }
 
 }

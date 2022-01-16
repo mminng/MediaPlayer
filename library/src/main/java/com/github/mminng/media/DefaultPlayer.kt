@@ -36,6 +36,7 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
     override fun onBufferingUpdate(mp: MediaPlayer?, percent: Int) {
         if (getPlayerState() == PlayerState.IDLE ||
             getPlayerState() == PlayerState.INITIALIZED ||
+            getPlayerState() == PlayerState.PREPARING ||
             getPlayerState() == PlayerState.ERROR
         ) return
         mp?.let {

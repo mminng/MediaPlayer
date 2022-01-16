@@ -49,6 +49,7 @@ abstract class BaseController @JvmOverloads constructor(
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        if (_controllerIsReady) return
         onLayoutCreated(controllerLayout)
         addView(stateBufferingView, 0)
         addView(stateCompletionView)
