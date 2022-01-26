@@ -15,6 +15,7 @@
         android:theme="@style/Theme.MediaPlayer">
         <activity
             android:name=".TestActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:exported="false" />
         <activity
             android:name=".OpenActivity"
@@ -27,6 +28,7 @@
         </activity>
         <activity
             android:name=".MainActivity"
+            android:theme="@style/Theme.PlayerActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:exported="false" />
     </application>

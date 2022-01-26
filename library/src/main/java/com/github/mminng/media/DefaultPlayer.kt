@@ -2,6 +2,7 @@ package com.github.mminng.media
 
 import android.media.MediaPlayer
 import android.view.Surface
+import android.view.SurfaceHolder
 import com.github.mminng.media.player.BasePlayer
 import com.github.mminng.media.player.PlayerState
 import com.github.mminng.media.utils.d
@@ -113,6 +114,9 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
         player.setSurface(surface)
     }
 
+    override fun setSurfaceHolder(surfaceHolder: SurfaceHolder?) {
+    }
+
     override fun reset() {
         player.reset()
     }
@@ -125,6 +129,12 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
 
     override fun getCurrentPosition(): Int = player.currentPosition
 
+    override fun getBufferingPosition(): Int = 0
+
     override fun getDuration(): Int = player.duration
+
+    override fun getVideoWidth(): Int = player.videoWidth
+
+    override fun getVideoHeight(): Int = player.videoHeight
 
 }

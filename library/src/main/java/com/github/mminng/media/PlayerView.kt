@@ -1,14 +1,12 @@
 package com.github.mminng.media
 
-import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
-import android.graphics.Color
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.Surface
+import android.view.SurfaceHolder
 import android.view.View
-import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
@@ -78,7 +76,6 @@ class PlayerView @JvmOverloads constructor(
             )
         )
         _renderer.setCallback(this)
-        setBackgroundColor(Color.BLACK)
     }
 
     override fun onVisibilityChanged(changedView: View, visibility: Int) {
@@ -98,6 +95,10 @@ class PlayerView @JvmOverloads constructor(
 
     override fun onRenderCreated(surface: Surface) {
         _player?.setSurface(surface)
+    }
+
+    override fun onRenderCreated(surfaceHolder: SurfaceHolder) {
+        _player?.setSurfaceHolder(surfaceHolder)
     }
 
     override fun onRenderChanged(width: Int, height: Int) {
@@ -216,6 +217,9 @@ class PlayerView @JvmOverloads constructor(
                     pause()
                 } else {
                     _pauseFromUser = false
+                    if (getPlayerState() == PlayerState.COMPLETION) {
+                        onSeekTo(Long.MIN_VALUE.toInt() + 1)
+                    }
                     start()
                 }
             }
@@ -238,6 +242,7 @@ class PlayerView @JvmOverloads constructor(
     override fun onPositionUpdated() {
         _player?.let {
             _controller?.onCurrentPosition(it.getCurrentPosition())
+            _controller?.onCurrentBufferingPosition(it.getBufferingPosition())
         }
     }
 
@@ -258,6 +263,24 @@ class PlayerView @JvmOverloads constructor(
             return it
         }
         return PlayerState.IDLE
+    }
+
+    fun getRenderer(): Renderer {
+        return _renderer
+    }
+
+    fun getVideoWidth(): Int {
+        _player?.let {
+            return it.getVideoWidth()
+        }
+        return 0
+    }
+
+    fun getVideoHeight(): Int {
+        _player?.let {
+            return it.getVideoHeight()
+        }
+        return 0
     }
 
     override fun prepare(playWhenPrepared: Boolean) {
@@ -331,9 +354,11 @@ class PlayerView @JvmOverloads constructor(
     }
 
     fun release() {
+        _player?.stateIdle()
         _controller?.stopUpdatePosition()
         _player?.release()
-        d("player release")
+        _renderer.release()
+        d("released")
     }
     /*public function end*/
 

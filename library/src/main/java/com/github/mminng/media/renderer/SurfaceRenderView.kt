@@ -5,8 +5,6 @@ import android.util.AttributeSet
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
-import kotlin.math.abs
-import kotlin.math.min
 
 /**
  * Created by zh on 2021/12/4.
@@ -26,45 +24,12 @@ class SurfaceRenderView @JvmOverloads constructor(
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        if (_videoWidth == 0.0F || _videoHeight == 0.0F) return
-        var width: Float = measuredWidth.toFloat()
-        var height: Float = measuredHeight.toFloat()
-        val viewAspectRatio: Float = width / height
-        val videoAspectRatio: Float = _videoWidth / _videoHeight
-        val difference: Float = videoAspectRatio / viewAspectRatio - 1
-        if (abs(difference) <= 0.01F) return
-        val needBeWider: Boolean = videoAspectRatio > viewAspectRatio
-        when (_renderMode) {
-            RenderMode.FIT -> {
-                if (difference > 0) {
-                    height = width / videoAspectRatio
-                } else {
-                    width = height * videoAspectRatio
-                }
-            }
-            RenderMode.FILL -> {
-                //do nothing
-            }
-            RenderMode.ZOOM -> {
-                if (difference > 0) {
-                    width = height * videoAspectRatio
-                } else {
-                    height = width / videoAspectRatio
-                }
-            }
-            RenderMode.DEFAULT -> {
-                if (needBeWider) {
-                    width = min(_videoWidth, width)
-                    height = width / videoAspectRatio
-                } else {
-                    height = min(_videoHeight, height)
-                    width = height * videoAspectRatio
-                }
-            }
-        }
+        val size: IntArray =
+            resize(_videoWidth, _videoHeight, measuredWidth, measuredHeight, _renderMode)
+        if (size.isEmpty()) return
         super.onMeasure(
-            MeasureSpec.makeMeasureSpec(width.toInt(), MeasureSpec.EXACTLY),
-            MeasureSpec.makeMeasureSpec(height.toInt(), MeasureSpec.EXACTLY)
+            MeasureSpec.makeMeasureSpec(size[0], MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(size[1], MeasureSpec.EXACTLY)
         )
     }
 
@@ -86,7 +51,8 @@ class SurfaceRenderView @JvmOverloads constructor(
     override fun getView(): View = this
 
     override fun release() {
-        //NO OP
+        holder.removeCallback(this)
+        _renderCallback = null
     }
 
     override fun setCallback(callback: Renderer.OnRenderCallback) {
@@ -95,7 +61,7 @@ class SurfaceRenderView @JvmOverloads constructor(
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-        _renderCallback?.onRenderCreated(holder.surface)
+        _renderCallback?.onRenderCreated(holder)
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {

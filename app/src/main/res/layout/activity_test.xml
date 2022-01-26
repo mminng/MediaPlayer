@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".TestActivity">
 
-    <com.github.mminng.media.renderer.SurfaceRenderView
+    <SurfaceView
         android:id="@+id/surfaceView"
         android:layout_width="0dp"
         android:layout_height="0dp"

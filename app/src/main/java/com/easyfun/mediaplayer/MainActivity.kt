@@ -21,6 +21,7 @@ import com.github.mminng.media.DefaultController
 import com.github.mminng.media.DefaultPlayer
 import com.github.mminng.media.PlayerView
 import com.github.mminng.media.renderer.RenderMode
+import com.github.mminng.media.renderer.SurfaceRenderView
 import com.squareup.picasso.Picasso
 
 class MainActivity : AppCompatActivity() {
@@ -70,15 +71,16 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         val controllerView = DefaultController(this)
         val controllerView1 = MyControllerView(this)
-        val player = DefaultPlayer()
-        playerView.setPlayer(player)
+//        val player = DefaultPlayer()
+        val exoPlayer = Player(this)
+        playerView.setPlayer(exoPlayer)
         playerView.setController(controllerView)
 //        playerView.setDataSource(localPath)
 //        playerView.setDataSource(localPath2)
-        playerView.setDataSource(localPath3)
+//        playerView.setDataSource(localPath3)
 //        playerView.setDataSource(localPath4)
 //        playerView.setDataSource("https://v.96koo.net/common/LzQxOTAvcmVsZWFzZS8yMDIwMDczMC9ETTRCV0cyV3llL0RNNEJXRzJXeWVfODQ4XzgwMA==_19929.m3u8")
-//        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
+        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/12/05/mp4/211205092838969197.mp4")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/12/10/mp4/211210143103622104.mp4")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/12/15/mp4/211215163524157166.mp4")
@@ -113,28 +115,16 @@ class MainActivity : AppCompatActivity() {
                 Toast.LENGTH_SHORT
             ).show()
         }
-        val contentView: ViewGroup = findViewById(Window.ID_ANDROID_CONTENT)
         val layoutParams = playerView.layoutParams
+        val contentView: ViewGroup = findViewById(Window.ID_ANDROID_CONTENT)
         playerView.setOnFullScreenModeChangedListener {
-//            if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE) {
-//                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-//                contentView.removeView(playerView)
-//                playerContent.addView(playerView, layoutParams)
-//                setDecorVisible(this)
-//            } else {
-//                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-//                playerContent.removeView(playerView)
-//                contentView.addView(
-//                    playerView, FrameLayout.LayoutParams(
-//                        FrameLayout.LayoutParams.MATCH_PARENT,
-//                        FrameLayout.LayoutParams.MATCH_PARENT
-//                    )
-//                )
-//                hideStatusBar(this)
-//                hideNavigationBar(this)
-//            }
-            if (testP) {
-                testP = false
+            if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE) {
+                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                contentView.removeView(playerView)
+                playerContent.addView(playerView, layoutParams)
+                setDecorVisible(this)
+            } else {
+                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                 playerContent.removeView(playerView)
                 contentView.addView(
                     playerView, FrameLayout.LayoutParams(
@@ -142,14 +132,28 @@ class MainActivity : AppCompatActivity() {
                         FrameLayout.LayoutParams.MATCH_PARENT
                     )
                 )
-                hideStatusBar(this@MainActivity)
-                hideNavigationBar(this@MainActivity)
-            } else {
-                testP = true
-                contentView.removeView(playerView)
-                playerContent.addView(playerView, layoutParams)
-                setDecorVisible(this@MainActivity)
+                hideStatusBar(this)
+                hideNavigationBar(this)
             }
+//            if (testP) {
+//                testP = false
+//                playerContent.removeView(playerView)
+//                contentView.addView(
+//                    playerView, FrameLayout.LayoutParams(
+//                        FrameLayout.LayoutParams.MATCH_PARENT,
+//                        FrameLayout.LayoutParams.MATCH_PARENT
+//                    )
+//                )
+////                TransitionManager.beginDelayedTransition(contentView)
+//                hideStatusBar(this@MainActivity)
+//                hideNavigationBar(this@MainActivity)
+//            } else {
+//                testP = true
+////                TransitionManager.beginDelayedTransition(contentView)
+//                contentView.removeView(playerView)
+//                playerContent.addView(playerView, layoutParams)
+//                setDecorVisible(this@MainActivity)
+//            }
         }
     }
 
