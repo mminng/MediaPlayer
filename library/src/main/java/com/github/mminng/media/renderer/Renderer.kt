@@ -1,7 +1,6 @@
 package com.github.mminng.media.renderer
 
 import android.view.Surface
-import android.view.SurfaceHolder
 import android.view.View
 import kotlin.math.abs
 import kotlin.math.min
@@ -13,7 +12,7 @@ interface Renderer {
 
     fun setRenderMode(renderMode: RenderMode)
 
-    fun setVideoSize(width: Float, height: Float)
+    fun setVideoSize(width: Int, height: Int)
 
     fun getView(): View
 
@@ -25,8 +24,6 @@ interface Renderer {
 
         fun onRenderCreated(surface: Surface)
 
-        fun onRenderCreated(surfaceHolder: SurfaceHolder)
-
         fun onRenderChanged(width: Int, height: Int)
 
         fun onRenderDestroyed()
@@ -35,13 +32,13 @@ interface Renderer {
     fun resize(
         videoWidth: Float,
         videoHeight: Float,
-        measuredWidth: Int,
-        measuredHeight: Int,
+        measuredWidth: Float,
+        measuredHeight: Float,
         renderMode: RenderMode
     ): IntArray {
         if (videoWidth == 0.0F || videoHeight == 0.0F) return intArrayOf()
-        var width: Float = measuredWidth.toFloat()
-        var height: Float = measuredHeight.toFloat()
+        var width: Float = measuredWidth
+        var height: Float = measuredHeight
         val viewAspectRatio: Float = width / height
         val videoAspectRatio: Float = videoWidth / videoHeight
         val difference: Float = videoAspectRatio / viewAspectRatio - 1

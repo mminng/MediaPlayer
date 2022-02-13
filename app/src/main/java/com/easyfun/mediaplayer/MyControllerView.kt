@@ -66,7 +66,7 @@ class MyControllerView @JvmOverloads constructor(
     override fun onClick(v: View?) {
         when (v) {
             playPauseView -> {
-                controllerListener?.onPlayPause(true)
+                controllerListener?.onPlayOrPause(true)
             }
             fullScreen -> {
                 controllerListener?.onFullScreen()
@@ -77,7 +77,7 @@ class MyControllerView @JvmOverloads constructor(
         }
     }
 
-    override fun onPlayPause(isPlaying: Boolean) {
+    override fun onPlayOrPause(isPlaying: Boolean) {
         if (isPlaying) {
             playPauseView.setImageResource(R.drawable.ic_action_playing)
         } else {
@@ -108,8 +108,15 @@ class MyControllerView @JvmOverloads constructor(
         }
     }
 
-    override fun onCurrentBufferingPosition(bufferingPosition: Int) {
-        timeBar.secondaryProgress = bufferingPosition
+    override fun onBufferingPosition(position: Int) {
+        timeBar.secondaryProgress = position
     }
 
+    override fun onShowController() {
+        TODO("Not yet implemented")
+    }
+
+    override fun onHideController() {
+        TODO("Not yet implemented")
+    }
 }

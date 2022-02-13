@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
+import com.github.mminng.media.utils.d
 
 /**
  * Created by zh on 2021/12/4.
@@ -13,8 +14,8 @@ class SurfaceRenderView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : SurfaceView(context, attrs), Renderer, SurfaceHolder.Callback {
 
-    private var _videoWidth: Float = 0.0F
-    private var _videoHeight: Float = 0.0F
+    private var _videoWidth: Int = 0
+    private var _videoHeight: Int = 0
     private var _renderMode: RenderMode = RenderMode.FIT
     private var _renderCallback: Renderer.OnRenderCallback? = null
 
@@ -25,7 +26,13 @@ class SurfaceRenderView @JvmOverloads constructor(
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val size: IntArray =
-            resize(_videoWidth, _videoHeight, measuredWidth, measuredHeight, _renderMode)
+            resize(
+                _videoWidth.toFloat(),
+                _videoHeight.toFloat(),
+                measuredWidth.toFloat(),
+                measuredHeight.toFloat(),
+                _renderMode
+            )
         if (size.isEmpty()) return
         super.onMeasure(
             MeasureSpec.makeMeasureSpec(size[0], MeasureSpec.EXACTLY),
@@ -40,7 +47,7 @@ class SurfaceRenderView @JvmOverloads constructor(
         }
     }
 
-    override fun setVideoSize(width: Float, height: Float) {
+    override fun setVideoSize(width: Int, height: Int) {
         if (_videoWidth != width || _videoHeight != height) {
             _videoWidth = width
             _videoHeight = height
@@ -53,6 +60,7 @@ class SurfaceRenderView @JvmOverloads constructor(
     override fun release() {
         holder.removeCallback(this)
         _renderCallback = null
+        d("RenderView released")
     }
 
     override fun setCallback(callback: Renderer.OnRenderCallback) {
@@ -61,7 +69,7 @@ class SurfaceRenderView @JvmOverloads constructor(
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-        _renderCallback?.onRenderCreated(holder)
+        _renderCallback?.onRenderCreated(holder.surface)
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {

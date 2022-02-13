@@ -3,25 +3,19 @@ package com.easyfun.mediaplayer
 import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
-import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.view.WindowManager
-import android.view.animation.Transformation
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.transition.TransitionManager
 import com.github.mminng.media.DefaultController
 import com.github.mminng.media.DefaultPlayer
 import com.github.mminng.media.PlayerView
 import com.github.mminng.media.renderer.RenderMode
-import com.github.mminng.media.renderer.SurfaceRenderView
 import com.squareup.picasso.Picasso
 
 class MainActivity : AppCompatActivity() {
@@ -64,32 +58,31 @@ class MainActivity : AppCompatActivity() {
         findViewById(R.id.player_content)
     }
 
-    var testP: Boolean = true
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val controllerView = DefaultController(this)
         val controllerView1 = MyControllerView(this)
-//        val player = DefaultPlayer()
-        val exoPlayer = Player(this)
-        playerView.setPlayer(exoPlayer)
+        val player = DefaultPlayer()
+//        val player = Player(this)
+        playerView.setPlayer(player)
         playerView.setController(controllerView)
+        controllerView.setCoverPlayButtonResource(R.drawable.ic_action_paused)
+        controllerView.setUpdateInterval(1000)
+        controllerView.setMediaTitle("https://images.unsplash.com/photo-1634334181759-a965220b6a91?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHx0b3BpYy1mZWVkfDExfGJEbzQ4Y1Vod25ZfHxlbnwwfHx8fA%3D%3D&auto=format&fit=crop&w=500&q=60")
+        controllerView.setCover {
+            Picasso.get()
+                .load("https://images.unsplash.com/photo-1634334181759-a965220b6a91?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHx0b3BpYy1mZWVkfDExfGJEbzQ4Y1Vod25ZfHxlbnwwfHx8fA%3D%3D&auto=format&fit=crop&w=500&q=60")
+                .into(it)
+        }
 //        playerView.setDataSource(localPath)
 //        playerView.setDataSource(localPath2)
 //        playerView.setDataSource(localPath3)
 //        playerView.setDataSource(localPath4)
 //        playerView.setDataSource("https://v.96koo.net/common/LzQxOTAvcmVsZWFzZS8yMDIwMDczMC9ETTRCV0cyV3llL0RNNEJXRzJXeWVfODQ4XzgwMA==_19929.m3u8")
-        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
-//        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/12/05/mp4/211205092838969197.mp4")
-//        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/12/10/mp4/211210143103622104.mp4")
-//        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/12/15/mp4/211215163524157166.mp4")
-        playerView.prepare(true)
-        playerView.setCover {
-            Picasso.get()
-                .load("https://images.unsplash.com/photo-1634334181759-a965220b6a91?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHx0b3BpYy1mZWVkfDExfGJEbzQ4Y1Vod25ZfHxlbnwwfHx8fA%3D%3D&auto=format&fit=crop&w=500&q=60")
-                .into(it)
-        }
+//        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
+        playerView.setDataSource("https://vfx.mtime.cn/Video/2022/01/14/mp4/220114181259659149.mp4")
+//        playerView.prepare()
         renderMode.setOnClickListener {
             playerView.setRenderMode(RenderMode.FIT)
         }
@@ -120,11 +113,13 @@ class MainActivity : AppCompatActivity() {
         playerView.setOnFullScreenModeChangedListener {
             if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE) {
                 requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                controllerView.setTopControllerVisibility(View.INVISIBLE)
                 contentView.removeView(playerView)
                 playerContent.addView(playerView, layoutParams)
                 setDecorVisible(this)
             } else {
                 requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                controllerView.setTopControllerVisibility(View.VISIBLE)
                 playerContent.removeView(playerView)
                 contentView.addView(
                     playerView, FrameLayout.LayoutParams(
@@ -184,7 +179,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus && !testP) {
+        if (hasFocus && resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             hideStatusBar(this)
             hideNavigationBar(this)
         }

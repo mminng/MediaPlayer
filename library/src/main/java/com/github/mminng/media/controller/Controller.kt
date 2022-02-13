@@ -3,6 +3,7 @@ package com.github.mminng.media.controller
 import android.view.View
 import android.widget.ImageView
 import androidx.annotation.LayoutRes
+import com.github.mminng.media.controller.gesture.Gesture
 import com.github.mminng.media.player.PlayerState
 
 /**
@@ -10,19 +11,23 @@ import com.github.mminng.media.player.PlayerState
  */
 interface Controller {
 
-    fun onPlayPause(isPlaying: Boolean)
+    fun onPlayOrPause(isPlaying: Boolean)
 
     fun onDuration(duration: Int)
 
     fun onCurrentPosition(position: Int)
 
-    fun onCurrentBufferingPosition(bufferingPosition: Int)
+    fun onBufferingPosition(position: Int)
 
     fun onFullScreen(isFullScreen: Boolean)
 
-    fun getView(): View
-
     fun onPlayerStateChanged(state: PlayerState, errorMessage: String = "none")
+
+    fun onPlayerError(errorMessage: String)
+
+    fun onShowController()
+
+    fun onHideController()
 
     @LayoutRes
     fun setCoverView(): Int
@@ -36,6 +41,8 @@ interface Controller {
     @LayoutRes
     fun setErrorView(): Int
 
+    fun setGestureController(gestureController: Gesture)
+
     fun bindCoverImage(view: ImageView)
 
     fun setCoverViewEnable(enable: Boolean)
@@ -48,19 +55,19 @@ interface Controller {
 
     fun stopUpdatePosition()
 
-    fun onPlayerError(errorMessage: String)
-
     fun isControllerReady(): Boolean
+
+    fun getView(): View
+
+    fun release()
 
     fun setOnControllerListener(listener: OnControllerListener)
 
     interface OnControllerListener {
 
-        fun onBindCoverImage(view: ImageView)
-
         fun prepare(playWhenPrepared: Boolean = false)
 
-        fun onPlayPause(pauseFromUser: Boolean = false)
+        fun onPlayOrPause(pauseFromUser: Boolean = false)
 
         fun onFullScreen()
 

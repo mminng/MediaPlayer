@@ -2,7 +2,9 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusable="true">
 
     <ImageView
         android:id="@+id/default_cover_imageview"
@@ -18,9 +20,9 @@
         android:background="#4D000000" />
 
     <ImageView
-        android:id="@+id/default_cover_play"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:id="@+id/default_cover_play_imageview"
+        android:layout_width="58dp"
+        android:layout_height="58dp"
         android:layout_gravity="center"
         android:src="@drawable/ic_cover_play"
         tools:ignore="ContentDescription" />

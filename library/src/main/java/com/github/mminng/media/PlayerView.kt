@@ -2,13 +2,12 @@ package com.github.mminng.media
 
 import android.content.Context
 import android.content.res.Configuration
+import android.graphics.Color
 import android.util.AttributeSet
-import android.view.Gravity
-import android.view.Surface
-import android.view.SurfaceHolder
-import android.view.View
+import android.view.*
 import android.widget.FrameLayout
 import android.widget.ImageView
+import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import com.github.mminng.media.controller.Controller
 import com.github.mminng.media.player.Player
@@ -26,8 +25,7 @@ import com.github.mminng.media.utils.e
 class PlayerView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : FrameLayout(context, attrs), Renderer.OnRenderCallback,
-    Player.OnPlayerListener, Player.OnPlayerStateListener,
-    Controller.OnControllerListener {
+    Player.OnPlayerListener, Controller.OnControllerListener {
 
     companion object {
         private const val STATE_KEY: String = "STATE_KEY"
@@ -43,7 +41,6 @@ class PlayerView @JvmOverloads constructor(
     private var _coverViewEnable: Boolean
     private var _completionViewEnable: Boolean
     private var _errorViewEnable: Boolean
-    private var _onCoverBindListener: ((view: ImageView) -> Unit)? = null
     private var _onFullScreenModeChangedListener: (() -> Unit)? = null
 
     private var _currentDataSource: String = ""
@@ -58,15 +55,16 @@ class PlayerView @JvmOverloads constructor(
                 _renderer =
                     if (renderType == 0) SurfaceRenderView(context) else TextureRenderView(context)
                 _coverViewEnable =
-                    getBoolean(R.styleable.PlayerView_coverViewEnable, true)
+                    getBoolean(R.styleable.PlayerView_coverViewEnable, false)
                 _completionViewEnable =
-                    getBoolean(R.styleable.PlayerView_completionViewEnable, true)
+                    getBoolean(R.styleable.PlayerView_completionViewEnable, false)
                 _errorViewEnable =
-                    getBoolean(R.styleable.PlayerView_errorViewEnable, true)
+                    getBoolean(R.styleable.PlayerView_errorViewEnable, false)
             } finally {
                 recycle()
             }
         }
+        setBackgroundColor(Color.YELLOW)
         addView(
             _renderer.getView(),
             LayoutParams(
@@ -97,24 +95,19 @@ class PlayerView @JvmOverloads constructor(
         _player?.setSurface(surface)
     }
 
-    override fun onRenderCreated(surfaceHolder: SurfaceHolder) {
-        _player?.setSurfaceHolder(surfaceHolder)
-    }
-
     override fun onRenderChanged(width: Int, height: Int) {
     }
 
     override fun onRenderDestroyed() {
+        if (_renderer.getView() is SurfaceView) {
+            _player?.setSurface(null)
+        }
     }
 
     override fun onVideoSizeChanged(width: Int, height: Int) {
         d("video_width:$width")
         d("video_height:$height")
-        _renderer.setVideoSize(width.toFloat(), height.toFloat())
-    }
-
-    override fun onBufferingUpdate(bufferingPosition: Int) {
-        _controller?.onCurrentBufferingPosition(bufferingPosition)
+        _renderer.setVideoSize(width, height)
     }
 
     override fun onPlayerStateChanged(state: PlayerState, errorMessage: String) {
@@ -136,7 +129,7 @@ class PlayerView @JvmOverloads constructor(
                 _controller?.let {
                     if (_currentRetryPosition == 0 && it.isControllerReady()) {
                         it.onCurrentPosition(0)
-                        it.onCurrentBufferingPosition(0)
+                        it.onBufferingPosition(0)
                         it.onDuration(0)
                     }
                 }
@@ -174,20 +167,20 @@ class PlayerView @JvmOverloads constructor(
                 d("STATE STARTED")
                 stateMap[STATE_KEY] = state
                 _controller?.updatePosition()
-                _controller?.onPlayPause(true)
+                _controller?.onPlayOrPause(true)
             }
             PlayerState.PAUSED -> {
                 d("STATE PAUSED")
                 stateMap[STATE_KEY] = state
                 _controller?.stopUpdatePosition()
-                _controller?.onPlayPause(false)
+                _controller?.onPlayOrPause(false)
             }
             PlayerState.COMPLETION -> {
                 d("STATE COMPLETED")
                 stateMap[STATE_KEY] = state
                 _pauseFromUser = true
                 _controller?.stopUpdatePosition()
-                _controller?.onPlayPause(false)
+                _controller?.onPlayOrPause(false)
             }
             PlayerState.ERROR -> {
                 d("STATE ERROR:$errorMessage")
@@ -197,16 +190,12 @@ class PlayerView @JvmOverloads constructor(
                     _currentRetryPosition = it.getCurrentPosition()
                 }
                 _controller?.stopUpdatePosition()
-                _controller?.onPlayPause(false)
+                _controller?.onPlayOrPause(false)
             }
         }
     }
 
-    override fun onBindCoverImage(view: ImageView) {
-        _onCoverBindListener?.invoke(view)
-    }
-
-    override fun onPlayPause(pauseFromUser: Boolean) {
+    override fun onPlayOrPause(pauseFromUser: Boolean) {
         if (getPlayerState() == PlayerState.ERROR) return
         if (getPlayerState() == PlayerState.INITIALIZED) {
             prepare(true)
@@ -233,7 +222,8 @@ class PlayerView @JvmOverloads constructor(
     override fun onSeekTo(position: Int) {
         if (getPlayerState() == PlayerState.IDLE ||
             getPlayerState() == PlayerState.INITIALIZED ||
-            getPlayerState() == PlayerState.PREPARING ||
+            getPlayerState() == PlayerState.PREPARING
+            ||
             getPlayerState() == PlayerState.ERROR
         ) return
         _player?.seekTo(position)
@@ -242,7 +232,7 @@ class PlayerView @JvmOverloads constructor(
     override fun onPositionUpdated() {
         _player?.let {
             _controller?.onCurrentPosition(it.getCurrentPosition())
-            _controller?.onCurrentBufferingPosition(it.getBufferingPosition())
+            _controller?.onBufferingPosition(it.getBufferingPosition())
         }
     }
 
@@ -293,7 +283,6 @@ class PlayerView @JvmOverloads constructor(
         if (_player == null) {
             _player = player
             player.setOnPlayerListener(this)
-            player.setOnPlayerStateListener(this)
             player.stateIdle()
         }
     }
@@ -313,10 +302,6 @@ class PlayerView @JvmOverloads constructor(
         _renderer.setRenderMode(mode)
     }
 
-    fun setCover(listener: (view: ImageView) -> Unit) {
-        this._onCoverBindListener = listener
-    }
-
     fun setDataSource(source: String) {
         _currentDataSource = source
         _player?.setDataSource(source)
@@ -327,7 +312,8 @@ class PlayerView @JvmOverloads constructor(
         if (_pauseFromUser) return
         if (getPlayerState() == PlayerState.IDLE ||
             getPlayerState() == PlayerState.INITIALIZED ||
-            getPlayerState() == PlayerState.PREPARING ||
+            getPlayerState() == PlayerState.PREPARING
+            ||
             getPlayerState() == PlayerState.ERROR
         ) return
         _player?.start()
@@ -354,11 +340,10 @@ class PlayerView @JvmOverloads constructor(
     }
 
     fun release() {
-        _player?.stateIdle()
-        _controller?.stopUpdatePosition()
+        _player?.setSurface(null)
         _player?.release()
+        _controller?.release()
         _renderer.release()
-        d("released")
     }
     /*public function end*/
 

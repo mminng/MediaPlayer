@@ -1,8 +1,8 @@
 package com.easyfun.mediaplayer
 
 import android.content.Context
+import android.util.Log
 import android.view.Surface
-import android.view.SurfaceHolder
 import com.github.mminng.media.player.BasePlayer
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
@@ -77,10 +77,7 @@ class Player constructor(context: Context) : BasePlayer() {
     }
 
     override fun setSurface(surface: Surface?) {
-    }
-
-    override fun setSurfaceHolder(surfaceHolder: SurfaceHolder?) {
-        player.setVideoSurfaceHolder(surfaceHolder)
+        player.setVideoSurface(surface)
     }
 
     override fun reset() {
@@ -89,6 +86,7 @@ class Player constructor(context: Context) : BasePlayer() {
 
     override fun release() {
         player.release()
+        Log.d("PlayerDebug", "ExoPlayer released")
     }
 
     override fun isPlaying(): Boolean {

@@ -4,10 +4,14 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.annotation.DrawableRes
 import com.github.mminng.media.controller.BaseController
 import com.github.mminng.media.utils.convertMillis
+import com.github.mminng.media.utils.e
+import com.github.mminng.media.widget.MarqueeTextView
 
 /**
  * Created by zh on 2021/9/20.
@@ -17,6 +21,9 @@ class DefaultController @JvmOverloads constructor(
 ) : BaseController(context, attrs), View.OnClickListener,
     SeekBar.OnSeekBarChangeListener {
 
+    private val title: MarqueeTextView by lazy {
+        findViewById(R.id.media_title)
+    }
     private val playPauseView: ImageView by lazy {
         findViewById(R.id.media_play_pause)
     }
@@ -32,11 +39,20 @@ class DefaultController @JvmOverloads constructor(
     private val fullScreenView: ImageView by lazy {
         findViewById(R.id.media_fullScreen)
     }
-    private val errorText: TextView by lazy {
+    private val topControllerView: LinearLayout by lazy {
+        findViewById(R.id.media_controller_top)
+    }
+    private val bottomControllerView: LinearLayout by lazy {
+        findViewById(R.id.media_controller_bottom)
+    }
+    private val errorMessageView: TextView by lazy {
         getErrorView().findViewById(R.id.default_error_message)
     }
 
     private var _seekFromUser: Boolean = false
+    private var _titleStr: String = ""
+    private var _topControllerVisibility: Int = View.INVISIBLE
+    private var _bottomControllerVisibility: Int = View.VISIBLE
 
     override fun setControllerLayout(): Int {
         return R.layout.default_controller_layout
@@ -50,6 +66,9 @@ class DefaultController @JvmOverloads constructor(
         bindCoverView()
         bindCompletionView()
         bindErrorView()
+        topControllerView.visibility = _topControllerVisibility
+        bottomControllerView.visibility = _bottomControllerVisibility
+        title.text = _titleStr
     }
 
     override fun onStartTrackingTouch(seekBar: SeekBar?) {
@@ -72,9 +91,11 @@ class DefaultController @JvmOverloads constructor(
     override fun onClick(v: View?) {
         when (v) {
             playPauseView -> {
-                controllerListener?.onPlayPause(true)
+                showController()
+                controllerListener?.onPlayOrPause(true)
             }
             fullScreenView -> {
+                showController()
                 controllerListener?.onFullScreen()
             }
             else -> {
@@ -83,7 +104,7 @@ class DefaultController @JvmOverloads constructor(
         }
     }
 
-    override fun onPlayPause(isPlaying: Boolean) {
+    override fun onPlayOrPause(isPlaying: Boolean) {
         if (isPlaying) {
             playPauseView.setImageResource(R.drawable.ic_action_playing)
         } else {
@@ -111,16 +132,30 @@ class DefaultController @JvmOverloads constructor(
         }
     }
 
-    override fun onCurrentBufferingPosition(bufferingPosition: Int) {
-        timeBar.secondaryProgress = bufferingPosition
+    override fun onBufferingPosition(position: Int) {
+        timeBar.secondaryProgress = position
     }
 
     override fun onPlayerError(errorMessage: String) {
-        errorText.text = errorMessage
+        errorMessageView.text = errorMessage
+    }
+
+    override fun onShowController() {
+        if (_topControllerVisibility == View.VISIBLE) {
+            setTopControllerVisibility(View.VISIBLE)
+            title.marquee()
+        }
+        setBottomControllerVisibility(View.VISIBLE)
+    }
+
+    override fun onHideController() {
+        title.cancel()
+        setTopControllerVisibility(View.INVISIBLE, false)
+        setBottomControllerVisibility(View.INVISIBLE)
     }
 
     private fun bindCoverView() {
-        val play: ImageView = getCoverView().findViewById(R.id.default_cover_play)
+        val play: ImageView = getCoverView().findViewById(R.id.default_cover_play_imageview)
         val cover: ImageView = getCoverView().findViewById(R.id.default_cover_imageview)
         play.setOnClickListener {
             getCoverView().visibility = GONE
@@ -130,7 +165,8 @@ class DefaultController @JvmOverloads constructor(
     }
 
     private fun bindCompletionView() {
-        val replay: TextView = getCompletionView().findViewById(R.id.default_completion_replay)
+        val replay: TextView =
+            getCompletionView().findViewById(R.id.default_completion_replay_button)
         replay.setOnClickListener {
             getCompletionView().visibility = GONE
             controllerListener?.onReplay()
@@ -138,10 +174,44 @@ class DefaultController @JvmOverloads constructor(
     }
 
     private fun bindErrorView() {
-        val retry: TextView = getErrorView().findViewById(R.id.default_error_retry)
+        val retry: TextView = getErrorView().findViewById(R.id.default_error_retry_button)
         retry.setOnClickListener {
             getErrorView().visibility = GONE
             controllerListener?.onRetry()
+        }
+    }
+
+    fun setMediaTitle(title: String) {
+        _titleStr = title
+        if (isControllerReady()) {
+            this.title.text = title
+        }
+    }
+
+    fun setCoverPlayButtonResource(@DrawableRes res: Int) {
+        getCoverView()
+            .findViewById<ImageView>(R.id.default_cover_play_imageview)
+            .setImageResource(res)
+    }
+
+    fun setTopControllerVisibility(visibility: Int, syncVisibility: Boolean = true) {
+        if (syncVisibility) {
+            _topControllerVisibility = visibility
+        }
+        if (isControllerReady()) {
+            topControllerView.visibility = visibility
+            if (visibility == View.VISIBLE) {
+                title.marquee()
+            } else {
+                title.cancel()
+            }
+        }
+    }
+
+    fun setBottomControllerVisibility(visibility: Int) {
+        _bottomControllerVisibility = visibility
+        if (isControllerReady()) {
+            bottomControllerView.visibility = visibility
         }
     }
 

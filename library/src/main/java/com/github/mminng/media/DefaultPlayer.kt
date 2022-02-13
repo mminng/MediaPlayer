@@ -2,7 +2,6 @@ package com.github.mminng.media
 
 import android.media.MediaPlayer
 import android.view.Surface
-import android.view.SurfaceHolder
 import com.github.mminng.media.player.BasePlayer
 import com.github.mminng.media.player.PlayerState
 import com.github.mminng.media.utils.d
@@ -15,6 +14,7 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
     MediaPlayer.OnInfoListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener {
 
     private val player: MediaPlayer = MediaPlayer()
+    private var _bufferingPosition: Int = 0
 
     init {
         player.setOnPreparedListener(this)
@@ -41,8 +41,8 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
             getPlayerState() == PlayerState.ERROR
         ) return
         mp?.let {
-            bufferingUpdate(it.duration * percent / 100)
-            d("buffering:${it.duration * percent / 100}")
+            _bufferingPosition = it.duration * percent / 100
+            d("buffering_update：$_bufferingPosition")
         }
     }
 
@@ -114,22 +114,20 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
         player.setSurface(surface)
     }
 
-    override fun setSurfaceHolder(surfaceHolder: SurfaceHolder?) {
-    }
-
     override fun reset() {
         player.reset()
     }
 
     override fun release() {
         player.release()
+        d("MediaPlayer released")
     }
 
     override fun isPlaying(): Boolean = player.isPlaying
 
     override fun getCurrentPosition(): Int = player.currentPosition
 
-    override fun getBufferingPosition(): Int = 0
+    override fun getBufferingPosition(): Int = _bufferingPosition
 
     override fun getDuration(): Int = player.duration
 

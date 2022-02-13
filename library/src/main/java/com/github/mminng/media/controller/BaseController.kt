@@ -8,27 +8,40 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.annotation.LayoutRes
 import com.github.mminng.media.R
+import com.github.mminng.media.controller.gesture.Gesture
+import com.github.mminng.media.controller.gesture.GestureController
 import com.github.mminng.media.player.PlayerState
+import com.github.mminng.media.utils.d
 
 /**
  * Created by zh on 2021/12/9.
  */
 abstract class BaseController @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
-) : FrameLayout(context, attrs), Controller {
+) : FrameLayout(context, attrs), Controller, Gesture.OnGestureListener {
 
     companion object {
-        private const val UPDATE_INTERVAL: Long = 500
+        private var UPDATE_INTERVAL: Long = 500
+        private var VISIBILITY_INTERVAL: Long = 5000
     }
 
-    private var _coverViewEnable: Boolean = true
-    private var _completionViewEnable: Boolean = true
-    private var _errorViewEnable: Boolean = true
-    private var _controllerIsReady: Boolean = false
+    private val progressRunnable: Runnable = Runnable {
+        updatePosition()
+    }
+    private val visibilityRunnable: Runnable = Runnable {
+        hideController()
+    }
 
+    private var _coverViewEnable: Boolean = false
+    private var _completionViewEnable: Boolean = false
+    private var _errorViewEnable: Boolean = false
+    private var _controllerIsReady: Boolean = false
+    private var _gestureController: Gesture = GestureController(context)
+    private var _controllerIsVisible: Boolean = false
+    private var _onCoverBindListener: ((view: ImageView) -> Unit)? = null
     var controllerListener: Controller.OnControllerListener? = null
 
-    private val controllerLayout: View by lazy {
+    private val controller: View by lazy {
         inflateLayout(setControllerLayout(), true)
     }
     private val stateCoverView: View by lazy {
@@ -43,14 +56,12 @@ abstract class BaseController @JvmOverloads constructor(
     private val stateErrorView: View by lazy {
         inflateLayout(setErrorView())
     }
-    private val progressRunnable: Runnable = Runnable {
-        updatePosition()
-    }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         if (_controllerIsReady) return
-        onLayoutCreated(controllerLayout)
+        onLayoutCreated(controller)
+        addView(_gestureController.getView(), 0)
         addView(stateBufferingView, 0)
         addView(stateCompletionView)
         addView(stateErrorView)
@@ -58,6 +69,8 @@ abstract class BaseController @JvmOverloads constructor(
         stateBufferingView.visibility = INVISIBLE
         stateCompletionView.visibility = GONE
         stateErrorView.visibility = GONE
+        stateCoverView.visibility = if (_coverViewEnable) VISIBLE else GONE
+        _gestureController.setOnGestureListener(this)
         _controllerIsReady = true
     }
 
@@ -65,6 +78,51 @@ abstract class BaseController @JvmOverloads constructor(
     abstract fun setControllerLayout(): Int
 
     abstract fun onLayoutCreated(view: View)
+
+    override fun onPlayerStateChanged(state: PlayerState, errorMessage: String) {
+        when (state) {
+            PlayerState.IDLE -> {
+            }
+            PlayerState.INITIALIZED -> {
+            }
+            PlayerState.PREPARING -> {
+                stateBufferingView.visibility = VISIBLE
+            }
+            PlayerState.PREPARED -> {
+                stateBufferingView.visibility = INVISIBLE
+            }
+            PlayerState.BUFFERING -> {
+                stateBufferingView.visibility = VISIBLE
+            }
+            PlayerState.BUFFERED -> {
+                stateBufferingView.visibility = INVISIBLE
+            }
+            PlayerState.RENDERING -> {
+            }
+            PlayerState.STARTED -> {
+            }
+            PlayerState.PAUSED -> {
+                showController(false)
+            }
+            PlayerState.COMPLETION -> {
+                if (_completionViewEnable) {
+                    stateCompletionView.visibility = VISIBLE
+                    hideController()
+                } else {
+                    showController(false)
+                }
+            }
+            PlayerState.ERROR -> {
+                if (_errorViewEnable) {
+                    stateErrorView.visibility = VISIBLE
+                    hideController()
+                } else {
+                    showController(false)
+                }
+                onPlayerError(errorMessage)
+            }
+        }
+    }
 
     override fun setCoverView(): Int {
         return R.layout.default_state_cover_layout
@@ -82,8 +140,13 @@ abstract class BaseController @JvmOverloads constructor(
         return R.layout.default_state_error_layout
     }
 
+    override fun setGestureController(gestureController: Gesture) {
+        if (_gestureController === gestureController) return
+        _gestureController = gestureController
+    }
+
     override fun bindCoverImage(view: ImageView) {
-        controllerListener?.onBindCoverImage(view)
+        _onCoverBindListener?.invoke(view)
     }
 
     override fun setCoverViewEnable(enable: Boolean) {
@@ -113,9 +176,21 @@ abstract class BaseController @JvmOverloads constructor(
         }
     }
 
-    override fun getView(): View = this
+    override fun onSingleTap() {
+        if (_controllerIsVisible) {
+            hideController()
+        } else {
+            showController()
+        }
+    }
 
-    override fun isControllerReady(): Boolean = _controllerIsReady
+    override fun onDoubleTap() {
+        showController()
+        controllerListener?.onPlayOrPause(true)
+    }
+
+    override fun onLongPress() {
+    }
 
     override fun updatePosition() {
         controllerListener?.onPositionUpdated()
@@ -126,51 +201,23 @@ abstract class BaseController @JvmOverloads constructor(
         removeCallbacks(progressRunnable)
     }
 
-    override fun onPlayerStateChanged(state: PlayerState, errorMessage: String) {
-        when (state) {
-            PlayerState.IDLE -> {
-            }
-            PlayerState.INITIALIZED -> {
-            }
-            PlayerState.PREPARING -> {
-                stateBufferingView.visibility = VISIBLE
-            }
-            PlayerState.PREPARED -> {
-                stateBufferingView.visibility = INVISIBLE
-            }
-            PlayerState.BUFFERING -> {
-                stateBufferingView.visibility = VISIBLE
-            }
-            PlayerState.BUFFERED -> {
-                stateBufferingView.visibility = INVISIBLE
-            }
-            PlayerState.RENDERING -> {
-            }
-            PlayerState.STARTED -> {
-            }
-            PlayerState.PAUSED -> {
-            }
-            PlayerState.COMPLETION -> {
-                if (_completionViewEnable) {
-                    stateCompletionView.visibility = VISIBLE
-                }
-            }
-            PlayerState.ERROR -> {
-                if (_errorViewEnable) {
-                    stateErrorView.visibility = VISIBLE
-                }
-                onPlayerError(errorMessage)
-            }
-        }
-    }
+    override fun isControllerReady(): Boolean = _controllerIsReady
+
+    override fun getView(): View = this
 
     override fun setOnControllerListener(listener: Controller.OnControllerListener) {
         if (controllerListener === listener) return
         controllerListener = listener
     }
 
-    private fun inflateLayout(@LayoutRes layout: Int, attachToRoot: Boolean = false): View {
-        return LayoutInflater.from(context).inflate(layout, this, attachToRoot)
+    override fun release() {
+        removeCallbacks(progressRunnable)
+        removeCallbacks(visibilityRunnable)
+        d("Controller released")
+    }
+
+    fun setCover(listener: (view: ImageView) -> Unit) {
+        this._onCoverBindListener = listener
     }
 
     fun getCoverView(): View = stateCoverView
@@ -178,5 +225,32 @@ abstract class BaseController @JvmOverloads constructor(
     fun getCompletionView(): View = stateCompletionView
 
     fun getErrorView(): View = stateErrorView
+
+    fun setUpdateInterval(millis: Long) {
+        UPDATE_INTERVAL = millis
+    }
+
+    fun setVisibilityInterval(millis: Long) {
+        VISIBILITY_INTERVAL = millis
+    }
+
+    fun showController(shouldHide: Boolean = true) {
+        onShowController()
+        _controllerIsVisible = true
+        removeCallbacks(visibilityRunnable)
+        if (shouldHide) {
+//            postDelayed(visibilityRunnable, VISIBILITY_INTERVAL)
+        }
+    }
+
+    fun hideController() {
+        onHideController()
+        _controllerIsVisible = false
+        removeCallbacks(visibilityRunnable)
+    }
+
+    private fun inflateLayout(@LayoutRes layout: Int, attachToRoot: Boolean = false): View {
+        return LayoutInflater.from(context).inflate(layout, this, attachToRoot)
+    }
 
 }

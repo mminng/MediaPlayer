@@ -15,8 +15,8 @@ class TextureRenderView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : TextureView(context, attrs), Renderer, TextureView.SurfaceTextureListener {
 
-    private var _videoWidth: Float = 0.0F
-    private var _videoHeight: Float = 0.0F
+    private var _videoWidth: Int = 0
+    private var _videoHeight: Int = 0
     private var _renderMode: RenderMode = RenderMode.FIT
     private var _renderCallback: Renderer.OnRenderCallback? = null
     private var _surfaceTexture: SurfaceTexture? = null
@@ -31,7 +31,13 @@ class TextureRenderView @JvmOverloads constructor(
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val size: IntArray =
-            resize(_videoWidth, _videoHeight, measuredWidth, measuredHeight, _renderMode)
+            resize(
+                _videoWidth.toFloat(),
+                _videoHeight.toFloat(),
+                measuredWidth.toFloat(),
+                measuredHeight.toFloat(),
+                _renderMode
+            )
         if (size.isEmpty()) return
         super.onMeasure(
             MeasureSpec.makeMeasureSpec(size[0], MeasureSpec.EXACTLY),
@@ -46,7 +52,7 @@ class TextureRenderView @JvmOverloads constructor(
         }
     }
 
-    override fun setVideoSize(width: Float, height: Float) {
+    override fun setVideoSize(width: Int, height: Int) {
         if (_videoWidth != width || _videoHeight != height) {
             _videoWidth = width
             _videoHeight = height
@@ -61,7 +67,7 @@ class TextureRenderView @JvmOverloads constructor(
         _surfaceTexture?.release()
         surfaceTextureListener = null
         _renderCallback = null
-        d("TextureRenderView released")
+        d("RenderView released")
     }
 
     override fun setCallback(callback: Renderer.OnRenderCallback) {

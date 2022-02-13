@@ -3,50 +3,56 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <LinearLayout
+        android:id="@+id/media_controller_top"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="top"
         android:background="@drawable/background_top_controller_bar"
+        android:clickable="true"
+        android:focusable="true"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingBottom="10dp">
+        android:paddingBottom="20dp">
 
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingStart="10dp"
+            android:paddingStart="8dp"
             android:paddingTop="10dp"
             android:paddingEnd="10dp"
             android:paddingBottom="10dp"
-            android:src="@drawable/ic_action_back_ios" />
+            android:src="@drawable/ic_round_arrow_back_24" />
 
-        <TextView
+        <com.github.mminng.media.widget.MarqueeTextView
+            android:id="@+id/media_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="15dp"
-            android:ellipsize="end"
-            android:maxLines="1"
+            android:layout_marginEnd="12dp"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:singleLine="true"
             android:textColor="#FFFFFF"
             android:textSize="14sp"
             tools:text="Title" />
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/media_controller_bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="@drawable/background_bottom_controller_bar"
+        android:clickable="true"
+        android:focusable="true"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingTop="10dp">
+        android:paddingTop="20dp">
 
         <ImageView
             android:id="@+id/media_play_pause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingStart="10dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="10dp"
-            android:paddingBottom="10dp"
+            android:padding="10dp"
             android:src="@drawable/ic_action_paused" />
 
         <SeekBar

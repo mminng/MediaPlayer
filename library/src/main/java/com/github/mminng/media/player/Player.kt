@@ -1,7 +1,6 @@
 package com.github.mminng.media.player
 
 import android.view.Surface
-import android.view.SurfaceHolder
 
 /**
  * Created by zh on 2021/9/20.
@@ -19,8 +18,6 @@ interface Player {
     fun seekTo(position: Int)
 
     fun setSurface(surface: Surface?)
-
-    fun setSurfaceHolder(surfaceHolder: SurfaceHolder?)
 
     fun reset()
 
@@ -42,25 +39,16 @@ interface Player {
 
     fun setOnPlayerListener(listener: OnPlayerListener)
 
-    fun setOnPlayerStateListener(listener: OnPlayerStateListener)
-
     interface OnPlayerListener {
 
         fun onVideoSizeChanged(width: Int, height: Int)
-
-        fun onBufferingUpdate(bufferingPosition: Int)
-    }
-
-    fun videoSizeChanged(width: Int, height: Int)
-
-    fun bufferingUpdate(bufferingPosition: Int)
-
-    interface OnPlayerStateListener {
 
         fun onPlayerStateChanged(state: PlayerState, errorMessage: String = "none")
 
         fun getPlayerState(): PlayerState
     }
+
+    fun videoSizeChanged(width: Int, height: Int)
 
     fun stateIdle()
 
