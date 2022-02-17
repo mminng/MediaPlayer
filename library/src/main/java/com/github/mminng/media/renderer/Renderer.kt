@@ -18,9 +18,9 @@ interface Renderer {
 
     fun release()
 
-    fun setCallback(callback: OnRenderCallback)
+    fun setListener(listener: Listener)
 
-    interface OnRenderCallback {
+    interface Listener {
 
         fun onRenderCreated(surface: Surface)
 

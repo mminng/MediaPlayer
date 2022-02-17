@@ -3,12 +3,9 @@
 
     <declare-styleable name="PlayerView">
         <attr name="renderType" format="enum">
-            <enum name="surface" value="0" />
-            <enum name="texture" value="1" />
+            <enum name="surface_view" value="0" />
+            <enum name="texture_view" value="1" />
         </attr>
-        <attr name="coverViewEnable" format="boolean" />
-        <attr name="completionViewEnable" format="boolean" />
-        <attr name="errorViewEnable" format="boolean" />
     </declare-styleable>
 
 </resources>

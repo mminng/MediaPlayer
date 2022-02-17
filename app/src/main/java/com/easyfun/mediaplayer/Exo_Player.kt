@@ -13,7 +13,7 @@ import com.google.android.exoplayer2.video.VideoSize
 /**
  * Created by zh on 2022/1/19.
  */
-class Player constructor(context: Context) : BasePlayer() {
+class Exo_Player constructor(context: Context) : BasePlayer() {
 
     private val player: ExoPlayer = ExoPlayer.Builder(context).build()
 
@@ -86,7 +86,6 @@ class Player constructor(context: Context) : BasePlayer() {
 
     override fun release() {
         player.release()
-        Log.d("PlayerDebug", "ExoPlayer released")
     }
 
     override fun isPlaying(): Boolean {
@@ -109,7 +108,7 @@ class Player constructor(context: Context) : BasePlayer() {
         return player.videoSize.height
     }
 
-    override fun getBufferingPosition(): Int {
+    override fun getBufferPosition(): Int {
         return player.bufferedPosition.toInt()
     }
 

@@ -9,9 +9,9 @@ interface Gesture {
 
     fun getView(): View
 
-    fun setOnGestureListener(listener: OnGestureListener)
+    fun setListener(listener: Listener)
 
-    interface OnGestureListener {
+    interface Listener {
 
         fun onSingleTap()
 

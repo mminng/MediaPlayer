@@ -1,10 +1,7 @@
-package com.github.mminng.media
+package com.github.mminng.media.player
 
 import android.media.MediaPlayer
 import android.view.Surface
-import com.github.mminng.media.player.BasePlayer
-import com.github.mminng.media.player.PlayerState
-import com.github.mminng.media.utils.d
 
 /**
  * Created by zh on 2021/10/2.
@@ -42,7 +39,6 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
         ) return
         mp?.let {
             _bufferingPosition = it.duration * percent / 100
-            d("buffering_update：$_bufferingPosition")
         }
     }
 
@@ -120,14 +116,13 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
 
     override fun release() {
         player.release()
-        d("MediaPlayer released")
     }
 
     override fun isPlaying(): Boolean = player.isPlaying
 
     override fun getCurrentPosition(): Int = player.currentPosition
 
-    override fun getBufferingPosition(): Int = _bufferingPosition
+    override fun getBufferPosition(): Int = _bufferingPosition
 
     override fun getDuration(): Int = player.duration
 

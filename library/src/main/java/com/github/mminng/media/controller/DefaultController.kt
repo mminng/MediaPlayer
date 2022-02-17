@@ -1,4 +1,4 @@
-package com.github.mminng.media
+package com.github.mminng.media.controller
 
 import android.content.Context
 import android.util.AttributeSet
@@ -8,9 +8,8 @@ import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.annotation.DrawableRes
-import com.github.mminng.media.controller.BaseController
+import com.github.mminng.media.R
 import com.github.mminng.media.utils.convertMillis
-import com.github.mminng.media.utils.e
 import com.github.mminng.media.widget.MarqueeTextView
 
 /**
@@ -18,10 +17,9 @@ import com.github.mminng.media.widget.MarqueeTextView
  */
 class DefaultController @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
-) : BaseController(context, attrs), View.OnClickListener,
-    SeekBar.OnSeekBarChangeListener {
+) : BaseController(context, attrs), View.OnClickListener, SeekBar.OnSeekBarChangeListener {
 
-    private val title: MarqueeTextView by lazy {
+    private val titleView: MarqueeTextView by lazy {
         findViewById(R.id.media_title)
     }
     private val playPauseView: ImageView by lazy {
@@ -68,11 +66,12 @@ class DefaultController @JvmOverloads constructor(
         bindErrorView()
         topControllerView.visibility = _topControllerVisibility
         bottomControllerView.visibility = _bottomControllerVisibility
-        title.text = _titleStr
+        titleView.text = _titleStr
     }
 
     override fun onStartTrackingTouch(seekBar: SeekBar?) {
         _seekFromUser = true
+        showController(false)
     }
 
     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -83,6 +82,7 @@ class DefaultController @JvmOverloads constructor(
 
     override fun onStopTrackingTouch(seekBar: SeekBar?) {
         _seekFromUser = false
+        showController()
         seekBar?.let {
             controllerListener?.onSeekTo(it.progress)
         }
@@ -96,7 +96,7 @@ class DefaultController @JvmOverloads constructor(
             }
             fullScreenView -> {
                 showController()
-                controllerListener?.onFullScreen()
+                controllerListener?.onFullScreenChanged()
             }
             else -> {
                 //NO OP
@@ -112,7 +112,7 @@ class DefaultController @JvmOverloads constructor(
         }
     }
 
-    override fun onFullScreen(isFullScreen: Boolean) {
+    override fun onFullScreenChanged(isFullScreen: Boolean) {
         if (isFullScreen) {
             fullScreenView.setImageResource(R.drawable.ic_action_fullscreen_exit)
         } else {
@@ -132,7 +132,7 @@ class DefaultController @JvmOverloads constructor(
         }
     }
 
-    override fun onBufferingPosition(position: Int) {
+    override fun onBufferPosition(position: Int) {
         timeBar.secondaryProgress = position
     }
 
@@ -143,13 +143,11 @@ class DefaultController @JvmOverloads constructor(
     override fun onShowController() {
         if (_topControllerVisibility == View.VISIBLE) {
             setTopControllerVisibility(View.VISIBLE)
-            title.marquee()
         }
         setBottomControllerVisibility(View.VISIBLE)
     }
 
     override fun onHideController() {
-        title.cancel()
         setTopControllerVisibility(View.INVISIBLE, false)
         setBottomControllerVisibility(View.INVISIBLE)
     }
@@ -159,7 +157,7 @@ class DefaultController @JvmOverloads constructor(
         val cover: ImageView = getCoverView().findViewById(R.id.default_cover_imageview)
         play.setOnClickListener {
             getCoverView().visibility = GONE
-            controllerListener?.prepare(true)
+            controllerListener?.onPrepare(true)
         }
         bindCoverImage(cover)
     }
@@ -184,7 +182,7 @@ class DefaultController @JvmOverloads constructor(
     fun setMediaTitle(title: String) {
         _titleStr = title
         if (isControllerReady()) {
-            this.title.text = title
+            titleView.text = title
         }
     }
 
@@ -201,9 +199,9 @@ class DefaultController @JvmOverloads constructor(
         if (isControllerReady()) {
             topControllerView.visibility = visibility
             if (visibility == View.VISIBLE) {
-                title.marquee()
+                titleView.marquee()
             } else {
-                title.cancel()
+                titleView.cancel()
             }
         }
     }

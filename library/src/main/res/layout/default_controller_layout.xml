@@ -29,7 +29,6 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="12dp"
             android:ellipsize="marquee"
-            android:marqueeRepeatLimit="marquee_forever"
             android:singleLine="true"
             android:textColor="#FFFFFF"
             android:textSize="14sp"

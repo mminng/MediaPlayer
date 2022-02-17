@@ -69,7 +69,7 @@ class MyControllerView @JvmOverloads constructor(
                 controllerListener?.onPlayOrPause(true)
             }
             fullScreen -> {
-                controllerListener?.onFullScreen()
+                controllerListener?.onFullScreenChanged()
             }
             else -> {
                 //NO OP
@@ -85,7 +85,7 @@ class MyControllerView @JvmOverloads constructor(
         }
     }
 
-    override fun onFullScreen(isFullScreen: Boolean) {
+    override fun onFullScreenChanged(isFullScreen: Boolean) {
         if (isFullScreen) {
             fullScreen.setImageResource(R.drawable.ic_action_fullscreen_exit)
         } else {
@@ -108,7 +108,7 @@ class MyControllerView @JvmOverloads constructor(
         }
     }
 
-    override fun onBufferingPosition(position: Int) {
+    override fun onBufferPosition(position: Int) {
         timeBar.secondaryProgress = position
     }
 

@@ -6,7 +6,6 @@ import android.util.AttributeSet
 import android.view.Surface
 import android.view.TextureView
 import android.view.View
-import com.github.mminng.media.utils.d
 
 /**
  * Created by zh on 2021/12/4.
@@ -18,7 +17,7 @@ class TextureRenderView @JvmOverloads constructor(
     private var _videoWidth: Int = 0
     private var _videoHeight: Int = 0
     private var _renderMode: RenderMode = RenderMode.FIT
-    private var _renderCallback: Renderer.OnRenderCallback? = null
+    private var _listener: Renderer.Listener? = null
     private var _surfaceTexture: SurfaceTexture? = null
     private val surface: Surface by lazy {
         Surface(surfaceTexture)
@@ -60,35 +59,34 @@ class TextureRenderView @JvmOverloads constructor(
         }
     }
 
+    override fun setListener(listener: Renderer.Listener) {
+        if (_listener === listener) return
+        _listener = listener
+    }
+
     override fun getView(): View = this
 
     override fun release() {
         surface.release()
         _surfaceTexture?.release()
         surfaceTextureListener = null
-        _renderCallback = null
-        d("RenderView released")
-    }
-
-    override fun setCallback(callback: Renderer.OnRenderCallback) {
-        if (_renderCallback === callback) return
-        _renderCallback = callback
+        _listener = null
     }
 
     override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
         _surfaceTexture?.let {
             setSurfaceTexture(it)
         }
-        _renderCallback?.onRenderCreated(this.surface)
+        _listener?.onRenderCreated(this.surface)
     }
 
     override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
-        _renderCallback?.onRenderChanged(width, height)
+        _listener?.onRenderChanged(width, height)
     }
 
     override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
         _surfaceTexture = surface
-        _renderCallback?.onRenderDestroyed()
+        _listener?.onRenderDestroyed()
         return false
     }
 

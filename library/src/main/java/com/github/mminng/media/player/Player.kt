@@ -11,9 +11,9 @@ interface Player {
 
     fun prepare()
 
-    fun pause()
-
     fun start()
+
+    fun pause()
 
     fun seekTo(position: Int)
 
@@ -27,7 +27,7 @@ interface Player {
 
     fun getCurrentPosition(): Int
 
-    fun getBufferingPosition(): Int
+    fun getBufferPosition(): Int
 
     fun getDuration(): Int
 
@@ -37,15 +37,15 @@ interface Player {
 
     fun getPlayerState(): PlayerState
 
-    fun setOnPlayerListener(listener: OnPlayerListener)
+    fun setListener(listener: Listener)
 
-    interface OnPlayerListener {
+    interface Listener {
 
         fun onVideoSizeChanged(width: Int, height: Int)
 
         fun onPlayerStateChanged(state: PlayerState, errorMessage: String = "none")
 
-        fun getPlayerState(): PlayerState
+        fun onPlayerState(): PlayerState
     }
 
     fun videoSizeChanged(width: Int, height: Int)

@@ -5,7 +5,6 @@ import android.util.AttributeSet
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
-import com.github.mminng.media.utils.d
 
 /**
  * Created by zh on 2021/12/4.
@@ -17,7 +16,7 @@ class SurfaceRenderView @JvmOverloads constructor(
     private var _videoWidth: Int = 0
     private var _videoHeight: Int = 0
     private var _renderMode: RenderMode = RenderMode.FIT
-    private var _renderCallback: Renderer.OnRenderCallback? = null
+    private var _listener: Renderer.Listener? = null
 
     init {
         holder.addCallback(this)
@@ -55,29 +54,28 @@ class SurfaceRenderView @JvmOverloads constructor(
         }
     }
 
+    override fun setListener(listener: Renderer.Listener) {
+        if (_listener === listener) return
+        _listener = listener
+    }
+
     override fun getView(): View = this
 
     override fun release() {
         holder.removeCallback(this)
-        _renderCallback = null
-        d("RenderView released")
-    }
-
-    override fun setCallback(callback: Renderer.OnRenderCallback) {
-        if (_renderCallback === callback) return
-        _renderCallback = callback
+        _listener = null
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-        _renderCallback?.onRenderCreated(holder.surface)
+        _listener?.onRenderCreated(holder.surface)
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        _renderCallback?.onRenderChanged(width, height)
+        _listener?.onRenderChanged(width, height)
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
-        _renderCallback?.onRenderDestroyed()
+        _listener?.onRenderDestroyed()
     }
 
 }

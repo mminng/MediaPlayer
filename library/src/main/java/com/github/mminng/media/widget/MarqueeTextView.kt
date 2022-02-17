@@ -10,7 +10,7 @@ import android.widget.TextView
  * Created by zh on 2022/2/1.
  */
 @SuppressLint("AppCompatCustomView")
-class MarqueeTextView @JvmOverloads constructor(
+internal class MarqueeTextView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : TextView(context, attrs) {
 
@@ -25,4 +25,5 @@ class MarqueeTextView @JvmOverloads constructor(
     fun cancel() {
         ellipsize = TextUtils.TruncateAt.END
     }
+
 }

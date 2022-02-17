@@ -5,66 +5,66 @@ package com.github.mminng.media.player
  */
 abstract class BasePlayer : Player {
 
-    private var _playerListener: Player.OnPlayerListener? = null
+    private var _listener: Player.Listener? = null
 
     override fun videoSizeChanged(width: Int, height: Int) {
-        _playerListener?.onVideoSizeChanged(width, height)
+        _listener?.onVideoSizeChanged(width, height)
     }
 
     override fun stateIdle() {
-        _playerListener?.onPlayerStateChanged(PlayerState.IDLE)
+        _listener?.onPlayerStateChanged(PlayerState.IDLE)
     }
 
     override fun stateInitialized() {
-        _playerListener?.onPlayerStateChanged(PlayerState.INITIALIZED)
+        _listener?.onPlayerStateChanged(PlayerState.INITIALIZED)
     }
 
     override fun statePreparing() {
-        _playerListener?.onPlayerStateChanged(PlayerState.PREPARING)
+        _listener?.onPlayerStateChanged(PlayerState.PREPARING)
     }
 
     override fun statePrepared() {
-        _playerListener?.onPlayerStateChanged(PlayerState.PREPARED)
+        _listener?.onPlayerStateChanged(PlayerState.PREPARED)
     }
 
     override fun stateBufferingStart() {
-        _playerListener?.onPlayerStateChanged(PlayerState.BUFFERING)
+        _listener?.onPlayerStateChanged(PlayerState.BUFFERING)
     }
 
     override fun stateBufferingEnd() {
-        _playerListener?.onPlayerStateChanged(PlayerState.BUFFERED)
+        _listener?.onPlayerStateChanged(PlayerState.BUFFERED)
     }
 
     override fun stateRenderingStart() {
-        _playerListener?.onPlayerStateChanged(PlayerState.RENDERING)
+        _listener?.onPlayerStateChanged(PlayerState.RENDERING)
     }
 
     override fun stateStarted() {
-        _playerListener?.onPlayerStateChanged(PlayerState.STARTED)
+        _listener?.onPlayerStateChanged(PlayerState.STARTED)
     }
 
     override fun statePaused() {
-        _playerListener?.onPlayerStateChanged(PlayerState.PAUSED)
+        _listener?.onPlayerStateChanged(PlayerState.PAUSED)
     }
 
     override fun stateCompletion() {
-        _playerListener?.onPlayerStateChanged(PlayerState.COMPLETION)
+        _listener?.onPlayerStateChanged(PlayerState.COMPLETION)
     }
 
     override fun stateError(errorMessage: String) {
-        _playerListener?.onPlayerStateChanged(PlayerState.ERROR, errorMessage)
+        _listener?.onPlayerStateChanged(PlayerState.ERROR, errorMessage)
     }
 
     override fun getPlayerState(): PlayerState {
-        _playerListener?.getPlayerState()?.let {
+        _listener?.onPlayerState()?.let {
             return it
         }
         return PlayerState.IDLE
     }
 
-    override fun setOnPlayerListener(listener: Player.OnPlayerListener) {
-        if (_playerListener === listener) return
-        _playerListener = listener
+    override fun setListener(listener: Player.Listener) {
+        if (_listener === listener) return
+        _listener = listener
     }
 
 }

@@ -8,16 +8,15 @@ import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
-import android.widget.FrameLayout
 
 /**
  * Created by zh on 2022/1/31.
  */
 abstract class BaseGesture @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : FrameLayout(context, attrs, defStyleAttr), Gesture, View.OnTouchListener {
+) : View(context, attrs, defStyleAttr), Gesture, View.OnTouchListener {
 
-    private var _onGestureListener: Gesture.OnGestureListener? = null
+    private var _listener: Gesture.Listener? = null
     private val gestureDetector: GestureDetector
 
     init {
@@ -27,12 +26,12 @@ abstract class BaseGesture @JvmOverloads constructor(
             object : GestureDetector.SimpleOnGestureListener() {
 
                 override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
-                    _onGestureListener?.onSingleTap()
+                    _listener?.onSingleTap()
                     return super.onSingleTapConfirmed(e)
                 }
 
                 override fun onDoubleTap(e: MotionEvent?): Boolean {
-                    _onGestureListener?.onDoubleTap()
+                    _listener?.onDoubleTap()
                     return super.onDoubleTap(e)
                 }
 
@@ -52,7 +51,7 @@ abstract class BaseGesture @JvmOverloads constructor(
                             vibrate.vibrate(20)
                         }
                     }
-                    _onGestureListener?.onLongPress()
+                    _listener?.onLongPress()
                     super.onLongPress(e)
                 }
             })
@@ -67,11 +66,11 @@ abstract class BaseGesture @JvmOverloads constructor(
         return gestureDetector.onTouchEvent(event)
     }
 
-    override fun getView(): View = this
-
-    override fun setOnGestureListener(listener: Gesture.OnGestureListener) {
-        if (_onGestureListener === listener) return
-        _onGestureListener = listener
+    override fun setListener(listener: Gesture.Listener) {
+        if (_listener === listener) return
+        _listener = listener
     }
+
+    override fun getView(): View = this
 
 }
