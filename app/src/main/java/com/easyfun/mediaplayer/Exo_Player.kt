@@ -4,10 +4,7 @@ import android.content.Context
 import android.util.Log
 import android.view.Surface
 import com.github.mminng.media.player.BasePlayer
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.PlaybackException
-import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.video.VideoSize
 
 /**
@@ -78,6 +75,10 @@ class Exo_Player constructor(context: Context) : BasePlayer() {
 
     override fun setSurface(surface: Surface?) {
         player.setVideoSurface(surface)
+    }
+
+    override fun setSpeed(speed: Float) {
+        player.playbackParameters = PlaybackParameters(speed)
     }
 
     override fun reset() {

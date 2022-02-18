@@ -5,9 +5,11 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.AttributeSet
+import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
+import kotlin.math.absoluteValue
 
 /**
  * Created by zh on 2022/1/31.
@@ -51,7 +53,7 @@ abstract class BaseGesture @JvmOverloads constructor(
                             vibrate.vibrate(20)
                         }
                     }
-                    _listener?.onLongPress()
+                    _listener?.onLongTap(true)
                     super.onLongPress(e)
                 }
             })
@@ -63,6 +65,16 @@ abstract class BaseGesture @JvmOverloads constructor(
     }
 
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+        when (event?.action) {
+            MotionEvent.ACTION_DOWN -> {
+            }
+            MotionEvent.ACTION_MOVE -> {
+
+            }
+            MotionEvent.ACTION_UP -> {
+                _listener?.onLongTap(false)
+            }
+        }
         return gestureDetector.onTouchEvent(event)
     }
 

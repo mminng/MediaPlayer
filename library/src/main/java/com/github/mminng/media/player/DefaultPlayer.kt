@@ -1,7 +1,11 @@
 package com.github.mminng.media.player
 
 import android.media.MediaPlayer
+import android.media.PlaybackParams
+import android.os.Build
 import android.view.Surface
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 
 /**
  * Created by zh on 2021/10/2.
@@ -108,6 +112,12 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
 
     override fun setSurface(surface: Surface?) {
         player.setSurface(surface)
+    }
+
+    override fun setSpeed(speed: Float) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            player.playbackParams = player.playbackParams.setSpeed(speed)
+        }
     }
 
     override fun reset() {

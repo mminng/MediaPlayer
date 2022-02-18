@@ -2,6 +2,7 @@ package com.easyfun.mediaplayer
 
 import android.view.Surface
 import com.github.mminng.media.player.BasePlayer
+import com.github.mminng.media.player.PlayerState
 import tv.danmaku.ijk.media.player.IMediaPlayer
 import tv.danmaku.ijk.media.player.IjkMediaPlayer
 
@@ -14,6 +15,8 @@ class Ijk_Player : BasePlayer() {
     private var _bufferingPosition: Int = 0
 
     init {
+//        IjkMediaPlayer.loadLibrariesOnce(null)
+//        IjkMediaPlayer.native_profileBegin("libijkplayer.so")
         player.setOnPreparedListener {
             statePrepared()
         }
@@ -27,7 +30,9 @@ class Ijk_Player : BasePlayer() {
             override fun onInfo(p0: IMediaPlayer?, p1: Int, p2: Int): Boolean {
                 when (p1) {
                     IjkMediaPlayer.MEDIA_INFO_BUFFERING_START -> {
-                        stateBufferingStart()
+                        if (getPlayerState() != PlayerState.PREPARED) {
+                            stateBufferingStart()
+                        }
                     }
                     IjkMediaPlayer.MEDIA_INFO_BUFFERING_END -> {
                         stateBufferingEnd()
@@ -74,6 +79,13 @@ class Ijk_Player : BasePlayer() {
     }
 
     override fun prepare() {
+        //防止倍速后声音变调
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "soundtouch", 1)
+        //seekTo优化
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "enable-accurate-seek", 1)
+        //准备就绪之后不会自动播放
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "start-on-prepared", 0)
+
         player.prepareAsync()
     }
 
@@ -93,12 +105,17 @@ class Ijk_Player : BasePlayer() {
         player.setSurface(surface)
     }
 
+    override fun setSpeed(speed: Float) {
+        player.setSpeed(speed)
+    }
+
     override fun reset() {
         player.reset()
     }
 
     override fun release() {
         player.release()
+//        IjkMediaPlayer.native_profileEnd()
     }
 
     override fun isPlaying(): Boolean {
@@ -124,4 +141,5 @@ class Ijk_Player : BasePlayer() {
     override fun getVideoHeight(): Int {
         return player.videoHeight
     }
+
 }

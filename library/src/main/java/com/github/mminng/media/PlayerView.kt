@@ -200,6 +200,10 @@ class PlayerView @JvmOverloads constructor(
         }
     }
 
+    override fun onTouchSpeed(speed: Float, isTouch: Boolean) {
+        setSpeed(speed)
+    }
+
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onFullScreenChanged() {
         if (_isFullScreen) {
@@ -295,8 +299,6 @@ class PlayerView @JvmOverloads constructor(
     }
 
     /*public function*/
-    fun getPlayerState(): PlayerState = onPlayerState()
-
     fun setPlayer(player: Player) {
         if (_player == null) {
             _player = player
@@ -329,7 +331,7 @@ class PlayerView @JvmOverloads constructor(
         _player?.stateInitialized()
     }
 
-    fun prepare(playWhenPrepared: Boolean) {
+    fun prepare(playWhenPrepared: Boolean = false) {
         onPrepare(playWhenPrepared)
     }
 
@@ -356,6 +358,10 @@ class PlayerView @JvmOverloads constructor(
 
     fun seekTo(position: Int) {
         onSeekTo(position)
+    }
+
+    fun setSpeed(speed: Float) {
+        _player?.setSpeed(speed)
     }
 
     fun replay() {
@@ -414,6 +420,8 @@ class PlayerView @JvmOverloads constructor(
         }
         return 0
     }
+
+    fun getPlayerState(): PlayerState = onPlayerState()
 
     fun release() {
         _player?.setSurface(null)

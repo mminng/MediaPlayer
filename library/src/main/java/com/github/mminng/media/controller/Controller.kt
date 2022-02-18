@@ -60,6 +60,8 @@ interface Controller {
 
         fun onPlayOrPause(pauseFromUser: Boolean = false)
 
+        fun onTouchSpeed(speed: Float, isTouch: Boolean)
+
         fun onFullScreenChanged()
 
         fun onSeekTo(position: Int)

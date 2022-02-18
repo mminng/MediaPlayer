@@ -19,6 +19,8 @@ interface Player {
 
     fun setSurface(surface: Surface?)
 
+    fun setSpeed(speed: Float)
+
     fun reset()
 
     fun release()

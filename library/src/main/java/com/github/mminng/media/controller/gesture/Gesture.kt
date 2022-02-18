@@ -17,6 +17,6 @@ interface Gesture {
 
         fun onDoubleTap()
 
-        fun onLongPress()
+        fun onLongTap(isTouch: Boolean)
     }
 }

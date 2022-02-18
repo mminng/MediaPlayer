@@ -6,8 +6,8 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.github.mminng.media.controller.DefaultController
-import com.github.mminng.media.player.DefaultPlayer
 import com.github.mminng.media.PlayerView
+import com.github.mminng.media.player.DefaultPlayer
 import com.github.mminng.media.renderer.RenderMode
 import com.squareup.picasso.Picasso
 
@@ -46,6 +46,9 @@ class MainActivity : AppCompatActivity() {
     private val getState: Button by lazy {
         findViewById(R.id.getState)
     }
+    private val setSpeed: Button by lazy {
+        findViewById(R.id.setSpeed)
+    }
     val controllerView: DefaultController by lazy {
         DefaultController(this)
     }
@@ -53,13 +56,13 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val player = DefaultPlayer()
-//        val player = Ijk_Player()
+//        val player = DefaultPlayer()
+        val player = Ijk_Player()
 //        val player = Exo_Player(this)
         playerView.setPlayer(player)
         playerView.setController(controllerView)
         controllerView.setCoverPlayButtonResource(R.drawable.ic_action_paused)
-        controllerView.setMediaTitle("https://60")
+        controllerView.setMediaTitle("好莱坞往事")
         controllerView.setCover {
             Picasso.get()
                 .load("https://images.unsplash.com/photo-1634334181759-a965220b6a91?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHx0b3BpYy1mZWVkfDExfGJEbzQ4Y1Vod25ZfHxlbnwwfHx8fA%3D%3D&auto=format&fit=crop&w=500&q=60")
@@ -70,7 +73,8 @@ class MainActivity : AppCompatActivity() {
 //        playerView.setDataSource(localPath3)
 //        playerView.setDataSource(localPath4)
 //        playerView.setDataSource("https://v.96koo.net/common/LzQxOTAvcmVsZWFzZS8yMDIwMDczMC9ETTRCV0cyV3llL0RNNEJXRzJXeWVfODQ4XzgwMA==_19929.m3u8")
-        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
+//        playerView.setDataSource("http://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
+        playerView.setDataSource("http://ips.ifeng.com/video19.ifeng.com/video09/2014/06/16/1989823-102-086-0009.mp4")
 //        playerView.setDataSource("http://vfx.mtime.cn/Video/2022/01/14/mp4/220114181259659149.mp4")
         playerView.prepare(true)
         renderMode.setOnClickListener {
@@ -95,6 +99,9 @@ class MainActivity : AppCompatActivity() {
                 Toast.LENGTH_SHORT
             ).show()
         }
+        setSpeed.setOnClickListener {
+            playerView.setSpeed(2.0F)
+        }
         playerView.setOnPlayerListener {
             prepared {
                 Toast.makeText(this@MainActivity, "准备就绪", Toast.LENGTH_SHORT).show()
@@ -115,7 +122,6 @@ class MainActivity : AppCompatActivity() {
             }
             completion {
                 Toast.makeText(this@MainActivity, "播放完成", Toast.LENGTH_SHORT).show()
-                playerView.replay()
             }
             error {
                 Toast.makeText(this@MainActivity, "播放错误$it", Toast.LENGTH_SHORT).show()

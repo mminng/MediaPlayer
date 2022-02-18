@@ -154,8 +154,12 @@ abstract class BaseController @JvmOverloads constructor(
         controllerListener?.onPlayOrPause(true)
     }
 
-    override fun onLongPress() {
-        // TODO: 长按
+    override fun onLongTap(isTouch: Boolean) {
+        if (isTouch) {
+            controllerListener?.onTouchSpeed(3.0F, isTouch)
+        } else {
+            controllerListener?.onTouchSpeed(1.0F, isTouch)
+        }
     }
 
     override fun updatePosition() {
