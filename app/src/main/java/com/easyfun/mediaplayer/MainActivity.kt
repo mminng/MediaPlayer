@@ -56,8 +56,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-//        val player = DefaultPlayer()
-        val player = Ijk_Player()
+        val player = DefaultPlayer()
+//        val player = Ijk_Player()
 //        val player = Exo_Player(this)
         playerView.setPlayer(player)
         playerView.setController(controllerView)
@@ -73,9 +73,9 @@ class MainActivity : AppCompatActivity() {
 //        playerView.setDataSource(localPath3)
 //        playerView.setDataSource(localPath4)
 //        playerView.setDataSource("https://v.96koo.net/common/LzQxOTAvcmVsZWFzZS8yMDIwMDczMC9ETTRCV0cyV3llL0RNNEJXRzJXeWVfODQ4XzgwMA==_19929.m3u8")
-//        playerView.setDataSource("http://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
+//        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
         playerView.setDataSource("http://ips.ifeng.com/video19.ifeng.com/video09/2014/06/16/1989823-102-086-0009.mp4")
-//        playerView.setDataSource("http://vfx.mtime.cn/Video/2022/01/14/mp4/220114181259659149.mp4")
+//        playerView.setDataSource("https://vfx.mtime.cn/Video/2022/01/14/mp4/220114181259659149.mp4")
         playerView.prepare(true)
         renderMode.setOnClickListener {
             playerView.setRenderMode(RenderMode.FIT)
@@ -122,6 +122,7 @@ class MainActivity : AppCompatActivity() {
             }
             completion {
                 Toast.makeText(this@MainActivity, "播放完成", Toast.LENGTH_SHORT).show()
+                playerView.replay()
             }
             error {
                 Toast.makeText(this@MainActivity, "播放错误$it", Toast.LENGTH_SHORT).show()

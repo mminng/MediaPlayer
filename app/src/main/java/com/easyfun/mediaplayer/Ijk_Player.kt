@@ -15,8 +15,8 @@ class Ijk_Player : BasePlayer() {
     private var _bufferingPosition: Int = 0
 
     init {
-//        IjkMediaPlayer.loadLibrariesOnce(null)
-//        IjkMediaPlayer.native_profileBegin("libijkplayer.so")
+        IjkMediaPlayer.loadLibrariesOnce(null)
+        IjkMediaPlayer.native_profileBegin("libijkplayer.so")
         player.setOnPreparedListener {
             statePrepared()
         }
@@ -85,6 +85,7 @@ class Ijk_Player : BasePlayer() {
         player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "enable-accurate-seek", 1)
         //准备就绪之后不会自动播放
         player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "start-on-prepared", 0)
+        player.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "fflags", "fastseek")
 
         player.prepareAsync()
     }
@@ -115,7 +116,7 @@ class Ijk_Player : BasePlayer() {
 
     override fun release() {
         player.release()
-//        IjkMediaPlayer.native_profileEnd()
+        IjkMediaPlayer.native_profileEnd()
     }
 
     override fun isPlaying(): Boolean {
