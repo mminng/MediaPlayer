@@ -18,9 +18,11 @@ interface Controller {
 
     fun onBufferPosition(position: Int)
 
-    fun onFullScreenChanged(isFullScreen: Boolean)
+    fun onScreenChanged(isFullScreen: Boolean)
 
     fun onPlayerStateChanged(state: PlayerState, errorMessage: String = "none")
+
+    fun onCompletion()
 
     fun onPlayerError(errorMessage: String)
 
@@ -40,6 +42,12 @@ interface Controller {
     @LayoutRes
     fun setErrorView(): Int
 
+    fun getCoverView(): View
+
+    fun getCompletionView(): View
+
+    fun getErrorView(): View
+
     fun bindCoverImage(view: ImageView)
 
     fun updatePosition()
@@ -48,7 +56,11 @@ interface Controller {
 
     fun isControllerReady(): Boolean
 
+    fun onCanBack(): Boolean
+
     fun getView(): View
+
+    fun getPlayerState(): PlayerState
 
     fun release()
 
@@ -60,9 +72,13 @@ interface Controller {
 
         fun onPlayOrPause(pauseFromUser: Boolean = false)
 
-        fun onTouchSpeed(speed: Float, isTouch: Boolean)
+        fun onPlayerBack()
 
-        fun onFullScreenChanged()
+        fun onChangeSpeed(speed: Float)
+
+        fun onTouchSpeed(isTouch: Boolean)
+
+        fun onScreenChanged()
 
         fun onSeekTo(position: Int)
 
@@ -71,6 +87,8 @@ interface Controller {
         fun onReplay()
 
         fun onRetry()
+
+        fun onPlayerState(): PlayerState
     }
 
 }

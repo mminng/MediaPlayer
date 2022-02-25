@@ -4,4 +4,5 @@
     <string name="player_retry">重试</string>
     <string name="player_completion">播放完成</string>
     <string name="player_replay">重播</string>
+    <string name="player_speed">倍速</string>
 </resources>

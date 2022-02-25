@@ -43,7 +43,7 @@ interface Renderer {
         val videoAspectRatio: Float = videoWidth / videoHeight
         val difference: Float = videoAspectRatio / viewAspectRatio - 1
         if (abs(difference) <= 0.01F) return intArrayOf()
-        val needBeWider: Boolean = videoAspectRatio > viewAspectRatio
+        val shouldWider: Boolean = videoAspectRatio > viewAspectRatio
         when (renderMode) {
             RenderMode.FIT -> {
                 if (difference > 0) {
@@ -53,7 +53,7 @@ interface Renderer {
                 }
             }
             RenderMode.FILL -> {
-                //do nothing
+                //NO OP
             }
             RenderMode.ZOOM -> {
                 if (difference > 0) {
@@ -63,7 +63,7 @@ interface Renderer {
                 }
             }
             RenderMode.DEFAULT -> {
-                if (needBeWider) {
+                if (shouldWider) {
                     width = min(videoWidth, width)
                     height = width / videoAspectRatio
                 } else {

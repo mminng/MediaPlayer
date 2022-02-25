@@ -3,11 +3,12 @@ package com.easyfun.mediaplayer
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.github.mminng.media.controller.DefaultController
 import com.github.mminng.media.PlayerView
-import com.github.mminng.media.player.DefaultPlayer
+import com.github.mminng.media.player.DefaultMediaPlayer
 import com.github.mminng.media.renderer.RenderMode
 import com.squareup.picasso.Picasso
 
@@ -49,6 +50,9 @@ class MainActivity : AppCompatActivity() {
     private val setSpeed: Button by lazy {
         findViewById(R.id.setSpeed)
     }
+    private val playerContent: FrameLayout by lazy {
+        findViewById(R.id.player_content)
+    }
     val controllerView: DefaultController by lazy {
         DefaultController(this)
     }
@@ -56,13 +60,15 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val player = DefaultPlayer()
+//        val player = DefaultMediaPlayer()
 //        val player = Ijk_Player()
-//        val player = Exo_Player(this)
+        val player = Exo_Player(this)
         playerView.setPlayer(player)
         playerView.setController(controllerView)
+//        controllerView.setCoverViewEnable(true)
+//        controllerView.setTopControllerVisibility(View.VISIBLE)
         controllerView.setCoverPlayButtonResource(R.drawable.ic_action_paused)
-        controllerView.setMediaTitle("好莱坞往事")
+        controllerView.setTitle("好莱坞往事")
         controllerView.setCover {
             Picasso.get()
                 .load("https://images.unsplash.com/photo-1634334181759-a965220b6a91?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHx0b3BpYy1mZWVkfDExfGJEbzQ4Y1Vod25ZfHxlbnwwfHx8fA%3D%3D&auto=format&fit=crop&w=500&q=60")
@@ -74,9 +80,9 @@ class MainActivity : AppCompatActivity() {
 //        playerView.setDataSource(localPath4)
 //        playerView.setDataSource("https://v.96koo.net/common/LzQxOTAvcmVsZWFzZS8yMDIwMDczMC9ETTRCV0cyV3llL0RNNEJXRzJXeWVfODQ4XzgwMA==_19929.m3u8")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
-        playerView.setDataSource("http://ips.ifeng.com/video19.ifeng.com/video09/2014/06/16/1989823-102-086-0009.mp4")
-//        playerView.setDataSource("https://vfx.mtime.cn/Video/2022/01/14/mp4/220114181259659149.mp4")
-        playerView.prepare(true)
+//        playerView.setDataSource("http://ips.ifeng.com/video19.ifeng.com/video09/2014/06/16/1989823-102-086-0009.mp4")
+        playerView.setDataSource("https://vfx.mtime.cn/Video/2022/01/14/mp4/220114181259659149.mp4")
+        playerView.prepare()
         renderMode.setOnClickListener {
             playerView.setRenderMode(RenderMode.FIT)
         }
@@ -104,16 +110,16 @@ class MainActivity : AppCompatActivity() {
         }
         playerView.setOnPlayerListener {
             prepared {
-                Toast.makeText(this@MainActivity, "准备就绪", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(this@MainActivity, "准备就绪", Toast.LENGTH_SHORT).show()
             }
             started {
-                Toast.makeText(this@MainActivity, "播放", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(this@MainActivity, "播放", Toast.LENGTH_SHORT).show()
             }
             paused {
-                Toast.makeText(this@MainActivity, "暂停", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(this@MainActivity, "暂停", Toast.LENGTH_SHORT).show()
             }
             screenChanged {
-                Toast.makeText(this@MainActivity, if (it) "全屏" else "小屏", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(this@MainActivity, if (it) "全屏" else "小屏", Toast.LENGTH_SHORT).show()
                 if (it) {
                     controllerView.setTopControllerVisibility(View.VISIBLE)
                 } else {
@@ -121,12 +127,26 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             completion {
-                Toast.makeText(this@MainActivity, "播放完成", Toast.LENGTH_SHORT).show()
-                playerView.replay()
+//                Toast.makeText(this@MainActivity, "播放完成", Toast.LENGTH_SHORT).show()
             }
             error {
-                Toast.makeText(this@MainActivity, "播放错误$it", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(this@MainActivity, "播放错误$it", Toast.LENGTH_SHORT).show()
             }
+        }
+//        playerContent.setOnKeyListener(object : View.OnKeyListener {
+//            override fun onKey(view: View?, keyCode: Int, event: KeyEvent?): Boolean {
+//                if (keyCode == KeyEvent.KEYCODE_BACK && event?.action == KeyEvent.ACTION_DOWN) {
+//                    Toast.makeText(this@MainActivity, "setOnKeyListener", Toast.LENGTH_SHORT).show()
+//                    return true
+//                }
+//                return false
+//            }
+//        })
+    }
+
+    override fun onBackPressed() {
+        if (playerView.canBack()) {
+            super.onBackPressed()
         }
     }
 

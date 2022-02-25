@@ -1,16 +1,13 @@
 package com.github.mminng.media.player
 
 import android.media.MediaPlayer
-import android.media.PlaybackParams
 import android.os.Build
 import android.view.Surface
-import android.widget.Toast
-import androidx.annotation.RequiresApi
 
 /**
  * Created by zh on 2021/10/2.
  */
-class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
+class DefaultMediaPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
     MediaPlayer.OnVideoSizeChangedListener, MediaPlayer.OnBufferingUpdateListener,
     MediaPlayer.OnInfoListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener {
 
@@ -139,5 +136,8 @@ class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
     override fun getVideoWidth(): Int = player.videoWidth
 
     override fun getVideoHeight(): Int = player.videoHeight
+
+    override fun getSpeed(): Float =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) player.playbackParams.speed else 0F
 
 }

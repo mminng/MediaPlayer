@@ -23,6 +23,7 @@
                 android:id="@+id/button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:focusable="true"
                 android:text="FIT Mode" />
 
             <Button
@@ -80,6 +81,7 @@
         android:id="@+id/player_content"
         android:layout_width="match_parent"
         android:layout_height="300dp"
+        android:focusableInTouchMode="true"
         android:background="@color/purple_200">
 
         <com.github.mminng.media.PlayerView

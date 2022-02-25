@@ -37,6 +37,8 @@ interface Player {
 
     fun getVideoHeight(): Int
 
+    fun getSpeed(): Float
+
     fun getPlayerState(): PlayerState
 
     fun setListener(listener: Listener)

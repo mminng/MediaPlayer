@@ -5,11 +5,9 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.AttributeSet
-import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
-import kotlin.math.absoluteValue
 
 /**
  * Created by zh on 2022/1/31.
@@ -18,8 +16,9 @@ abstract class BaseGesture @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr), Gesture, View.OnTouchListener {
 
-    private var _listener: Gesture.Listener? = null
     private val gestureDetector: GestureDetector
+    private var _hasLongTap: Boolean = false
+    private var _listener: Gesture.Listener? = null
 
     init {
         isClickable = true
@@ -45,14 +44,15 @@ abstract class BaseGesture @JvmOverloads constructor(
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             vibrate.vibrate(
                                 VibrationEffect.createOneShot(
-                                    20,
+                                    30,
                                     VibrationEffect.DEFAULT_AMPLITUDE
                                 )
                             )
                         } else {
-                            vibrate.vibrate(20)
+                            vibrate.vibrate(30)
                         }
                     }
+                    _hasLongTap = true
                     _listener?.onLongTap(true)
                     super.onLongPress(e)
                 }
@@ -69,10 +69,12 @@ abstract class BaseGesture @JvmOverloads constructor(
             MotionEvent.ACTION_DOWN -> {
             }
             MotionEvent.ACTION_MOVE -> {
-
             }
             MotionEvent.ACTION_UP -> {
-                _listener?.onLongTap(false)
+                if (_hasLongTap) {
+                    _listener?.onLongTap(false)
+                }
+                _hasLongTap = false
             }
         }
         return gestureDetector.onTouchEvent(event)

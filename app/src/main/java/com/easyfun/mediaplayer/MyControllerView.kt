@@ -69,7 +69,7 @@ class MyControllerView @JvmOverloads constructor(
                 controllerListener?.onPlayOrPause(true)
             }
             fullScreen -> {
-                controllerListener?.onFullScreenChanged()
+                controllerListener?.onScreenChanged()
             }
             else -> {
                 //NO OP
@@ -85,12 +85,15 @@ class MyControllerView @JvmOverloads constructor(
         }
     }
 
-    override fun onFullScreenChanged(isFullScreen: Boolean) {
+    override fun onScreenChanged(isFullScreen: Boolean) {
         if (isFullScreen) {
             fullScreen.setImageResource(R.drawable.ic_action_fullscreen_exit)
         } else {
             fullScreen.setImageResource(R.drawable.ic_action_fullscreen)
         }
+    }
+
+    override fun onCompletion() {
     }
 
     override fun onPlayerError(errorMessage: String) {

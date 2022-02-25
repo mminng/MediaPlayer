@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import android.view.Surface
 import com.github.mminng.media.player.BasePlayer
+import com.github.mminng.media.player.PlayerState
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.video.VideoSize
 
@@ -20,17 +21,26 @@ class Exo_Player constructor(context: Context) : BasePlayer() {
             super.onPlaybackStateChanged(playbackState)
             when (playbackState) {
                 Player.STATE_READY -> {
-                    statePrepared()
+                    stateBufferingEnd()
+                    if (getPlayerState() == PlayerState.PREPARING) {
+                        statePrepared()
+                    }
                 }
                 Player.STATE_BUFFERING -> {
                     stateBufferingStart()
                 }
                 Player.STATE_ENDED -> {
+                    player.playWhenReady = false
                     stateCompletion()
                 }
                 else -> {
                 }
             }
+        }
+
+        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            super.onPlayWhenReadyChanged(playWhenReady, reason)
+            Log.e("PlayerDebug", "playWhenReady=$playWhenReady")
         }
 
         override fun onVideoSizeChanged(videoSize: VideoSize) {
@@ -49,6 +59,7 @@ class Exo_Player constructor(context: Context) : BasePlayer() {
     }
 
     init {
+        player.playWhenReady = false
         player.addListener(listener)
     }
 
@@ -113,4 +124,7 @@ class Exo_Player constructor(context: Context) : BasePlayer() {
         return player.bufferedPosition.toInt()
     }
 
+    override fun getSpeed(): Float {
+        return player.playbackParameters.speed
+    }
 }

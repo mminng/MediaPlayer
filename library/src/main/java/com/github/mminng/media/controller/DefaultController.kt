@@ -9,8 +9,11 @@ import android.widget.SeekBar
 import android.widget.TextView
 import androidx.annotation.DrawableRes
 import com.github.mminng.media.R
+import com.github.mminng.media.player.PlayerState
 import com.github.mminng.media.utils.convertMillis
 import com.github.mminng.media.widget.MarqueeTextView
+import com.github.mminng.media.widget.Menu
+import com.github.mminng.media.widget.MenuView
 
 /**
  * Created by zh on 2021/9/20.
@@ -19,6 +22,9 @@ class DefaultController @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : BaseController(context, attrs), View.OnClickListener, SeekBar.OnSeekBarChangeListener {
 
+    private val backView: ImageView by lazy {
+        findViewById(R.id.media_back)
+    }
     private val titleView: MarqueeTextView by lazy {
         findViewById(R.id.media_title)
     }
@@ -33,6 +39,9 @@ class DefaultController @JvmOverloads constructor(
     }
     private val durationView: TextView by lazy {
         findViewById(R.id.media_duration)
+    }
+    private val speedView: TextView by lazy {
+        findViewById(R.id.media_speed)
     }
     private val fullScreenView: ImageView by lazy {
         findViewById(R.id.media_fullScreen)
@@ -49,21 +58,25 @@ class DefaultController @JvmOverloads constructor(
 
     private var _seekFromUser: Boolean = false
     private var _titleStr: String = ""
-    private var _topControllerVisibility: Int = View.INVISIBLE
+    private var _topControllerVisibility: Int = View.GONE
     private var _bottomControllerVisibility: Int = View.VISIBLE
+    private val speedMenu: MenuView<Float> = MenuView(context)
 
     override fun setControllerLayout(): Int {
         return R.layout.default_controller_layout
     }
 
     override fun onLayoutCreated(view: View) {
-        //also you can do findViewById() here
+        //findViewById() here
+        backView.setOnClickListener(this)
         playPauseView.setOnClickListener(this)
         fullScreenView.setOnClickListener(this)
+        speedView.setOnClickListener(this)
         timeBar.setOnSeekBarChangeListener(this)
         bindCoverView()
         bindCompletionView()
         bindErrorView()
+        addSpeedMenu()
         topControllerView.visibility = _topControllerVisibility
         bottomControllerView.visibility = _bottomControllerVisibility
         titleView.text = _titleStr
@@ -90,13 +103,21 @@ class DefaultController @JvmOverloads constructor(
 
     override fun onClick(v: View?) {
         when (v) {
+            backView -> {
+                showController()
+                controllerListener?.onPlayerBack()
+            }
             playPauseView -> {
                 showController()
                 controllerListener?.onPlayOrPause(true)
             }
             fullScreenView -> {
                 showController()
-                controllerListener?.onFullScreenChanged()
+                controllerListener?.onScreenChanged()
+            }
+            speedView -> {
+                hideController()
+                speedMenu.show()
             }
             else -> {
                 //NO OP
@@ -112,11 +133,13 @@ class DefaultController @JvmOverloads constructor(
         }
     }
 
-    override fun onFullScreenChanged(isFullScreen: Boolean) {
+    override fun onScreenChanged(isFullScreen: Boolean) {
         if (isFullScreen) {
             fullScreenView.setImageResource(R.drawable.ic_action_fullscreen_exit)
+            speedView.visibility = VISIBLE
         } else {
             fullScreenView.setImageResource(R.drawable.ic_action_fullscreen)
+            speedView.visibility = GONE
         }
     }
 
@@ -136,6 +159,12 @@ class DefaultController @JvmOverloads constructor(
         timeBar.secondaryProgress = position
     }
 
+    override fun onCompletion() {
+        if (speedMenu.isShowing()) {
+            speedMenu.hide()
+        }
+    }
+
     override fun onPlayerError(errorMessage: String) {
         errorMessageView.text = errorMessage
     }
@@ -148,14 +177,64 @@ class DefaultController @JvmOverloads constructor(
     }
 
     override fun onHideController() {
-        setTopControllerVisibility(View.INVISIBLE, false)
-        setBottomControllerVisibility(View.INVISIBLE)
+        setTopControllerVisibility(View.GONE, false)
+        setBottomControllerVisibility(View.GONE)
+    }
+
+    override fun onSingleTap() {
+        if (speedMenu.isShowing()) {
+            speedMenu.hide()
+        } else {
+            super.onSingleTap()
+        }
+    }
+
+    override fun onDoubleTap() {
+        if (speedMenu.isShowing()) {
+            speedMenu.hide()
+        } else {
+            super.onDoubleTap()
+        }
+    }
+
+    override fun onLongTap(isTouch: Boolean) {
+        if (speedMenu.isShowing()) {
+            speedMenu.hide()
+        } else {
+            super.onLongTap(isTouch)
+        }
+    }
+
+    override fun onCanBack(): Boolean {
+        return if (speedMenu.isShowing()) {
+            speedMenu.hide()
+            false
+        } else {
+            super.onCanBack()
+        }
+    }
+
+    private fun addSpeedMenu() {
+        addView(speedMenu)
+        val speedData: List<Menu<Float>> = listOf(
+            Menu(false, "2.0X", 2.0F),
+            Menu(false, "1.5X", 1.5F),
+            Menu(false, "1.25X", 1.25F),
+            Menu(true, "1.0X", 1.0F),
+            Menu(false, "0.75X", 0.75F),
+            Menu(false, "0.5X", 0.5F)
+        )
+        speedMenu.setMenuData(speedData)
+        speedMenu.setOnMenuSelectedListener {
+            controllerListener?.onChangeSpeed(it)
+        }
     }
 
     private fun bindCoverView() {
         val play: ImageView = getCoverView().findViewById(R.id.default_cover_play_imageview)
         val cover: ImageView = getCoverView().findViewById(R.id.default_cover_imageview)
         play.setOnClickListener {
+            if (getPlayerState() != PlayerState.INITIALIZED) return@setOnClickListener
             getCoverView().visibility = GONE
             controllerListener?.onPrepare(true)
         }
@@ -179,7 +258,7 @@ class DefaultController @JvmOverloads constructor(
         }
     }
 
-    fun setMediaTitle(title: String) {
+    fun setTitle(title: String) {
         _titleStr = title
         if (isControllerReady()) {
             titleView.text = title

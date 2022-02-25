@@ -15,6 +15,7 @@
         android:paddingBottom="20dp">
 
         <ImageView
+            android:id="@+id/media_back"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingStart="8dp"
@@ -87,6 +88,17 @@
             android:textColor="#FFFFFF"
             android:textSize="11sp"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/media_speed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:text="@string/player_speed"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
         <ImageView
             android:id="@+id/media_fullScreen"

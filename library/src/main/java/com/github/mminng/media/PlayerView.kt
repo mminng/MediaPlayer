@@ -16,6 +16,7 @@ import com.github.mminng.media.renderer.Renderer
 import com.github.mminng.media.renderer.SurfaceRenderView
 import com.github.mminng.media.renderer.TextureRenderView
 import com.github.mminng.media.utils.d
+import com.github.mminng.media.utils.e
 
 /**
  * Created by zh on 2021/10/1.
@@ -34,7 +35,8 @@ class PlayerView @JvmOverloads constructor(
     private var _pauseFromUser: Boolean = false
     private var _currentDataSource: String = ""
     private var _currentRetryPosition: Int = 0
-    private var _onPlayerListener: OnPlayerListener? = null
+    private var _currentSpeed: Float = 1.0F
+    private var _playerListener: OnPlayerListener? = null
     private val activity: AppCompatActivity = context as AppCompatActivity
     private val activityContentView: ViewGroup by lazy {
         activity.findViewById(Window.ID_ANDROID_CONTENT)
@@ -70,11 +72,6 @@ class PlayerView @JvmOverloads constructor(
 
     override fun onPlayerStateChanged(state: PlayerState, errorMessage: String) {
         _controller?.onPlayerStateChanged(state, errorMessage)
-        _player?.let {
-            if (state != PlayerState.ERROR) {
-                keepScreenOn = it.isPlaying()
-            }
-        }
         when (state) {
             PlayerState.IDLE -> {
                 d("Player idle")
@@ -100,16 +97,16 @@ class PlayerView @JvmOverloads constructor(
             PlayerState.PREPARED -> {
                 d("Player prepared")
                 playerState[0] = state
-                _player?.let {
-                    _controller?.onDuration(it.getDuration())
-                }
-                _onPlayerListener?.onPrepared()
+                _player?.let { _controller?.onDuration(it.getDuration()) }
+                _playerListener?.onPrepared()
                 if (_currentRetryPosition > 0) {
                     onSeekTo(_currentRetryPosition)
                     _currentRetryPosition = 0
                 }
                 if (_playWhenPrepared) {
                     start()
+                } else {
+                    _pauseFromUser = true
                 }
             }
             PlayerState.BUFFERING -> {
@@ -127,14 +124,14 @@ class PlayerView @JvmOverloads constructor(
                 playerState[0] = state
                 _controller?.updatePosition()
                 _controller?.onPlayOrPause(true)
-                _onPlayerListener?.onStarted()
+                _playerListener?.onStarted()
             }
             PlayerState.PAUSED -> {
                 d("Player paused")
                 playerState[0] = state
                 _controller?.stopUpdatePosition()
                 _controller?.onPlayOrPause(false)
-                _onPlayerListener?.onPaused()
+                _playerListener?.onPaused()
             }
             PlayerState.COMPLETION -> {
                 d("Player completed")
@@ -142,19 +139,23 @@ class PlayerView @JvmOverloads constructor(
                 _pauseFromUser = true
                 _controller?.stopUpdatePosition()
                 _controller?.onPlayOrPause(false)
-                _onPlayerListener?.onCompletion()
+                _playerListener?.onCompletion()
             }
             PlayerState.ERROR -> {
-                d("Player error:$errorMessage")
+                e("Player error:$errorMessage")
                 playerState[0] = state
                 keepScreenOn = false
-                _player?.let {
-                    _currentRetryPosition = it.getCurrentPosition()
-                }
+                _player?.let { _currentRetryPosition = it.getCurrentPosition() }
                 _controller?.stopUpdatePosition()
                 _controller?.onPlayOrPause(false)
-                _onPlayerListener?.onError(errorMessage)
+                _playerListener?.onError(errorMessage)
             }
+        }
+        _player?.let {
+            if (state != PlayerState.ERROR &&
+                state != PlayerState.BUFFERING &&
+                state != PlayerState.PREPARING
+            ) keepScreenOn = it.isPlaying()
         }
     }
 
@@ -180,49 +181,56 @@ class PlayerView @JvmOverloads constructor(
         _player?.statePreparing()
     }
 
+    override fun onPlayerBack() {
+        if (_isFullScreen) {
+            exitFullScreen()
+            _controller?.onScreenChanged(_isFullScreen)
+            _playerListener?.onScreenChanged(_isFullScreen)
+        } else {
+            activity.finish()
+        }
+    }
+
     override fun onPlayOrPause(pauseFromUser: Boolean) {
         if (getPlayerState() == PlayerState.ERROR) return
-        if (getPlayerState() == PlayerState.INITIALIZED) {
-            onPrepare(true)
-        } else {
-            _player?.let {
-                if (it.isPlaying()) {
-                    _pauseFromUser = pauseFromUser
-                    pause()
-                } else {
-                    _pauseFromUser = false
-                    if (getPlayerState() == PlayerState.COMPLETION) {
-                        onSeekTo(Long.MIN_VALUE.toInt() + 1)
-                    }
-                    start()
+        _player?.let {
+            if (it.isPlaying()) {
+                _pauseFromUser = pauseFromUser
+                pause()
+            } else {
+                _pauseFromUser = false
+                if (getPlayerState() == PlayerState.COMPLETION) {
+                    //For ExoPlayer
+                    onSeekTo(Long.MIN_VALUE.toInt() + 1)
                 }
+                start()
             }
         }
     }
 
-    override fun onTouchSpeed(speed: Float, isTouch: Boolean) {
+    override fun onChangeSpeed(speed: Float) {
         setSpeed(speed)
     }
 
-    @SuppressLint("SourceLockedOrientationActivity")
-    override fun onFullScreenChanged() {
-        if (_isFullScreen) {
-            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-            activityContentView.removeView(playerView)
-            addView(playerView)
-            showSystemBar()
+    override fun onTouchSpeed(isTouch: Boolean) {
+        if (isTouch) {
+            _player?.let {
+                _currentSpeed = it.getSpeed()
+            }
+            setSpeed(3.0F)
         } else {
-            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-            removeView(playerView)
-            activityContentView.addView(
-                playerView, LayoutParams(
-                    LayoutParams.MATCH_PARENT,
-                    LayoutParams.MATCH_PARENT
-                )
-            )
-            hideSystemBar()
+            setSpeed(_currentSpeed)
         }
-        _onPlayerListener?.onScreenChanged(_isFullScreen)
+    }
+
+    override fun onScreenChanged() {
+        if (_isFullScreen) {
+            exitFullScreen()
+        } else {
+            enterFullScreen()
+        }
+        _controller?.onScreenChanged(_isFullScreen)
+        _playerListener?.onScreenChanged(_isFullScreen)
     }
 
     override fun onSeekTo(position: Int) {
@@ -256,6 +264,26 @@ class PlayerView @JvmOverloads constructor(
         if (visibility == VISIBLE && _isFullScreen) {
             hideSystemBar()
         }
+    }
+
+    private fun enterFullScreen() {
+        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        removeView(playerView)
+        activityContentView.addView(
+            playerView, LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT
+            )
+        )
+        hideSystemBar()
+    }
+
+    @SuppressLint("SourceLockedOrientationActivity")
+    private fun exitFullScreen() {
+        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+        activityContentView.removeView(playerView)
+        addView(playerView)
+        showSystemBar()
     }
 
     @SuppressLint("RestrictedApi")
@@ -318,7 +346,7 @@ class PlayerView @JvmOverloads constructor(
     fun setOnPlayerListener(listener: OnPlayerListener.() -> Unit) {
         val playerListener = OnPlayerListener()
         playerListener.listener()
-        _onPlayerListener = playerListener
+        _playerListener = playerListener
     }
 
     fun setRenderMode(mode: RenderMode) {
@@ -375,6 +403,22 @@ class PlayerView @JvmOverloads constructor(
     fun reset() {
         _player?.reset()
         _player?.stateIdle()
+    }
+
+    fun canBack(): Boolean {
+        _controller?.let {
+            return if (!it.onCanBack()) {
+                false
+            } else if (_isFullScreen) {
+                exitFullScreen()
+                it.onScreenChanged(_isFullScreen)
+                _playerListener?.onScreenChanged(_isFullScreen)
+                false
+            } else {
+                true
+            }
+        }
+        return true
     }
 
     fun isPlaying(): Boolean {

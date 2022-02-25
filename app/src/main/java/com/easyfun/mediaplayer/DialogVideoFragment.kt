@@ -4,16 +4,16 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.DialogFragment
+import com.github.mminng.media.PlayerView
 import com.github.mminng.media.controller.DefaultController
 import com.github.mminng.media.player.DefaultMediaPlayer
-import com.github.mminng.media.PlayerView
 import com.github.mminng.media.renderer.RenderMode
 
 /**
- * Created by zh on 2022/2/15.
+ * Created by zh on 2022/2/21.
  */
-class TestFragment : Fragment() {
+class DialogVideoFragment : DialogFragment() {
 
     private lateinit var rootView: View
 
@@ -35,10 +35,10 @@ class TestFragment : Fragment() {
         val controllerView = DefaultController(requireContext())
         val player = DefaultMediaPlayer()
         playerView.setPlayer(player)
-        playerView.setRenderMode(RenderMode.DEFAULT)
+        playerView.setRenderMode(RenderMode.FILL)
         playerView.setController(controllerView)
-        playerView.setDataSource("https://vfx.mtime.cn/Video/2021/12/23/mp4/211223160113712148.mp4")
-        playerView.prepare()
+        playerView.setDataSource("http://vfx.mtime.cn/Video/2021/12/23/mp4/211223160113712148.mp4")
+        playerView.prepare(true)
         playerView.setOnPlayerListener {
             screenChanged {
                 if (it) {
@@ -53,7 +53,7 @@ class TestFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        playerView.start()
+//        playerView.start()
     }
 
     override fun onStop() {

@@ -26,7 +26,7 @@ abstract class BaseController @JvmOverloads constructor(
     private var _coverViewEnable: Boolean = false
     private var _completionViewEnable: Boolean = false
     private var _errorViewEnable: Boolean = false
-    private var _gestureController: Gesture = GestureController(context)
+    private var _gestureController: Gesture = GestureController(context, attrs)
     private var _onCoverBindListener: ((view: ImageView) -> Unit)? = null
     var controllerListener: Controller.Listener? = null
 
@@ -86,6 +86,7 @@ abstract class BaseController @JvmOverloads constructor(
             }
             PlayerState.PREPARED -> {
                 stateBufferView.visibility = INVISIBLE
+                showController()
             }
             PlayerState.BUFFERING -> {
                 stateBufferView.visibility = VISIBLE
@@ -96,7 +97,6 @@ abstract class BaseController @JvmOverloads constructor(
             PlayerState.RENDERING -> {
             }
             PlayerState.STARTED -> {
-                showController()
             }
             PlayerState.PAUSED -> {
                 showController(false)
@@ -108,6 +108,7 @@ abstract class BaseController @JvmOverloads constructor(
                 } else {
                     showController(false)
                 }
+                onCompletion()
             }
             PlayerState.ERROR -> {
                 if (_errorViewEnable) {
@@ -150,16 +151,11 @@ abstract class BaseController @JvmOverloads constructor(
     }
 
     override fun onDoubleTap() {
-        showController()
         controllerListener?.onPlayOrPause(true)
     }
 
     override fun onLongTap(isTouch: Boolean) {
-        if (isTouch) {
-            controllerListener?.onTouchSpeed(3.0F, isTouch)
-        } else {
-            controllerListener?.onTouchSpeed(1.0F, isTouch)
-        }
+        controllerListener?.onTouchSpeed(isTouch)
     }
 
     override fun updatePosition() {
@@ -178,12 +174,27 @@ abstract class BaseController @JvmOverloads constructor(
 
     override fun isControllerReady(): Boolean = _controllerIsReady
 
+    override fun onCanBack(): Boolean = true
+
     override fun getView(): View = this
+
+    override fun getPlayerState(): PlayerState {
+        controllerListener?.onPlayerState()?.let {
+            return it
+        }
+        return PlayerState.IDLE
+    }
 
     override fun release() {
         removeCallbacks(progressRunnable)
         removeCallbacks(visibilityRunnable)
     }
+
+    override fun getCoverView(): View = stateCoverView
+
+    override fun getCompletionView(): View = stateCompletionView
+
+    override fun getErrorView(): View = stateErrorView
 
     fun setCover(listener: (view: ImageView) -> Unit) {
         this._onCoverBindListener = listener
@@ -205,12 +216,6 @@ abstract class BaseController @JvmOverloads constructor(
     fun setErrorViewEnable(enable: Boolean) {
         _errorViewEnable = enable
     }
-
-    fun getCoverView(): View = stateCoverView
-
-    fun getCompletionView(): View = stateCompletionView
-
-    fun getErrorView(): View = stateErrorView
 
     fun setUpdateInterval(millis: Long) {
         _updateInterval = millis

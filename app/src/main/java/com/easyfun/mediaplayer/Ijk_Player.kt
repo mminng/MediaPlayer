@@ -85,7 +85,7 @@ class Ijk_Player : BasePlayer() {
         player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "enable-accurate-seek", 1)
         //准备就绪之后不会自动播放
         player.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "start-on-prepared", 0)
-        player.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "fflags", "fastseek")
+//        player.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "fflags", "fastseek")
 
         player.prepareAsync()
     }
@@ -141,6 +141,10 @@ class Ijk_Player : BasePlayer() {
 
     override fun getVideoHeight(): Int {
         return player.videoHeight
+    }
+
+    override fun getSpeed(): Float {
+        return player.getSpeed(0F)
     }
 
 }
