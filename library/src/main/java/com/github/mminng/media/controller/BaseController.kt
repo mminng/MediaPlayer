@@ -99,7 +99,6 @@ abstract class BaseController @JvmOverloads constructor(
             PlayerState.STARTED -> {
             }
             PlayerState.PAUSED -> {
-                showController(false)
             }
             PlayerState.COMPLETION -> {
                 if (_completionViewEnable) {
@@ -151,10 +150,17 @@ abstract class BaseController @JvmOverloads constructor(
     }
 
     override fun onDoubleTap() {
+        if (_controllerIsVisible) {
+            removeCallbacks(visibilityRunnable)
+            postDelayed(visibilityRunnable, _visibilityInterval)
+        }
         controllerListener?.onPlayOrPause(true)
     }
 
     override fun onLongTap(isTouch: Boolean) {
+        if (_controllerIsVisible) {
+            hideController()
+        }
         controllerListener?.onTouchSpeed(isTouch)
     }
 
@@ -176,8 +182,6 @@ abstract class BaseController @JvmOverloads constructor(
 
     override fun onCanBack(): Boolean = true
 
-    override fun getView(): View = this
-
     override fun getPlayerState(): PlayerState {
         controllerListener?.onPlayerState()?.let {
             return it
@@ -185,16 +189,18 @@ abstract class BaseController @JvmOverloads constructor(
         return PlayerState.IDLE
     }
 
+    override fun getView(): View = this
+
     override fun release() {
         removeCallbacks(progressRunnable)
         removeCallbacks(visibilityRunnable)
     }
 
-    override fun getCoverView(): View = stateCoverView
+    fun getCoverView(): View = stateCoverView
 
-    override fun getCompletionView(): View = stateCompletionView
+    fun getCompletionView(): View = stateCompletionView
 
-    override fun getErrorView(): View = stateErrorView
+    fun getErrorView(): View = stateErrorView
 
     fun setCover(listener: (view: ImageView) -> Unit) {
         this._onCoverBindListener = listener

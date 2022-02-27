@@ -10,13 +10,13 @@ import com.github.mminng.media.player.PlayerState
  */
 interface Controller {
 
-    fun onPlayOrPause(isPlaying: Boolean)
-
     fun onDuration(duration: Int)
 
     fun onCurrentPosition(position: Int)
 
     fun onBufferPosition(position: Int)
+
+    fun onPlayingChanged(isPlaying: Boolean)
 
     fun onScreenChanged(isFullScreen: Boolean)
 
@@ -42,12 +42,6 @@ interface Controller {
     @LayoutRes
     fun setErrorView(): Int
 
-    fun getCoverView(): View
-
-    fun getCompletionView(): View
-
-    fun getErrorView(): View
-
     fun bindCoverImage(view: ImageView)
 
     fun updatePosition()
@@ -58,9 +52,9 @@ interface Controller {
 
     fun onCanBack(): Boolean
 
-    fun getView(): View
-
     fun getPlayerState(): PlayerState
+
+    fun getView(): View
 
     fun release()
 
@@ -72,13 +66,13 @@ interface Controller {
 
         fun onPlayOrPause(pauseFromUser: Boolean = false)
 
+        fun onScreenChanged()
+
         fun onPlayerBack()
 
         fun onChangeSpeed(speed: Float)
 
         fun onTouchSpeed(isTouch: Boolean)
-
-        fun onScreenChanged()
 
         fun onSeekTo(position: Int)
 

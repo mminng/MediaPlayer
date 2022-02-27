@@ -125,7 +125,23 @@ class DefaultController @JvmOverloads constructor(
         }
     }
 
-    override fun onPlayOrPause(isPlaying: Boolean) {
+    override fun onDuration(duration: Int) {
+        durationView.text = convertMillis(duration)
+        timeBar.max = duration
+    }
+
+    override fun onCurrentPosition(position: Int) {
+        if (!_seekFromUser) {
+            positionView.text = convertMillis(position)
+            timeBar.progress = position
+        }
+    }
+
+    override fun onBufferPosition(position: Int) {
+        timeBar.secondaryProgress = position
+    }
+
+    override fun onPlayingChanged(isPlaying: Boolean) {
         if (isPlaying) {
             playPauseView.setImageResource(R.drawable.ic_action_playing)
         } else {
@@ -143,22 +159,6 @@ class DefaultController @JvmOverloads constructor(
         }
     }
 
-    override fun onDuration(duration: Int) {
-        durationView.text = convertMillis(duration)
-        timeBar.max = duration
-    }
-
-    override fun onCurrentPosition(position: Int) {
-        if (!_seekFromUser) {
-            positionView.text = convertMillis(position)
-            timeBar.progress = position
-        }
-    }
-
-    override fun onBufferPosition(position: Int) {
-        timeBar.secondaryProgress = position
-    }
-
     override fun onCompletion() {
         if (speedMenu.isShowing()) {
             speedMenu.hide()
@@ -167,6 +167,9 @@ class DefaultController @JvmOverloads constructor(
 
     override fun onPlayerError(errorMessage: String) {
         errorMessageView.text = errorMessage
+        if (speedMenu.isShowing()) {
+            speedMenu.hide()
+        }
     }
 
     override fun onShowController() {
@@ -200,9 +203,8 @@ class DefaultController @JvmOverloads constructor(
     override fun onLongTap(isTouch: Boolean) {
         if (speedMenu.isShowing()) {
             speedMenu.hide()
-        } else {
-            super.onLongTap(isTouch)
         }
+        super.onLongTap(isTouch)
     }
 
     override fun onCanBack(): Boolean {

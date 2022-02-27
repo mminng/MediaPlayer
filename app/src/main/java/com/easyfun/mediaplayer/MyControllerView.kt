@@ -77,7 +77,7 @@ class MyControllerView @JvmOverloads constructor(
         }
     }
 
-    override fun onPlayOrPause(isPlaying: Boolean) {
+    override fun onPlayingChanged(isPlaying: Boolean) {
         if (isPlaying) {
             playPauseView.setImageResource(R.drawable.ic_action_playing)
         } else {

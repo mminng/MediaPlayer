@@ -47,7 +47,7 @@ class MenuView<T> @JvmOverloads constructor(
         menuListview.overScrollMode = OVER_SCROLL_NEVER
         menuListview.layoutManager = LinearLayoutManager(context)
         menuListview.adapter = menuAdapter
-        menuAdapter.setOnItemClickListener { data, _ ->
+        menuAdapter.setOnItemClickListener { data, position ->
             menuAdapter.getData().forEach {
                 it.selected = false
             }
@@ -65,12 +65,10 @@ class MenuView<T> @JvmOverloads constructor(
 
     fun setSelectedColor(@ColorInt color: Int) {
         menuAdapter.setSelectedColor(color)
-        menuAdapter.notifyDataSetChanged()
     }
 
     fun setMenuData(data: List<Menu<T>>) {
         menuAdapter.setData(data)
-        menuAdapter.notifyDataSetChanged()
     }
 
     fun getMenuData(): List<Menu<T>> {
@@ -134,12 +132,16 @@ internal class MenuAdapter<T> : RecyclerView.Adapter<MenuViewHolder>() {
 
     override fun getItemCount() = _menuData.size
 
+    @SuppressLint("NotifyDataSetChanged")
     fun setSelectedColor(@ColorInt color: Int) {
         _selectedColor = color
+        notifyDataSetChanged()
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun setData(data: List<Menu<T>>) {
         this._menuData = data
+        notifyDataSetChanged()
     }
 
     fun getData(): List<Menu<T>> = this._menuData

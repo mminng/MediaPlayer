@@ -22,7 +22,7 @@
             android:paddingTop="10dp"
             android:paddingEnd="10dp"
             android:paddingBottom="10dp"
-            android:src="@drawable/ic_round_arrow_back_24" />
+            android:src="@drawable/ic_action_back" />
 
         <com.github.mminng.media.widget.MarqueeTextView
             android:id="@+id/media_title"

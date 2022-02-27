@@ -12,7 +12,7 @@ class DefaultMediaPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
     MediaPlayer.OnInfoListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener {
 
     private val player: MediaPlayer = MediaPlayer()
-    private var _bufferingPosition: Int = 0
+    private var _bufferPosition: Int = 0
 
     init {
         player.setOnPreparedListener(this)
@@ -39,7 +39,7 @@ class DefaultMediaPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
             getPlayerState() == PlayerState.ERROR
         ) return
         mp?.let {
-            _bufferingPosition = it.duration * percent / 100
+            _bufferPosition = it.duration * percent / 100
         }
     }
 
@@ -129,7 +129,7 @@ class DefaultMediaPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
 
     override fun getCurrentPosition(): Int = player.currentPosition
 
-    override fun getBufferPosition(): Int = _bufferingPosition
+    override fun getBufferPosition(): Int = _bufferPosition
 
     override fun getDuration(): Int = player.duration
 
@@ -138,6 +138,6 @@ class DefaultMediaPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
     override fun getVideoHeight(): Int = player.videoHeight
 
     override fun getSpeed(): Float =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) player.playbackParams.speed else 0F
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) player.playbackParams.speed else 1.0F
 
 }

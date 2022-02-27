@@ -14,6 +14,7 @@ import com.google.android.exoplayer2.video.VideoSize
 class Exo_Player constructor(context: Context) : BasePlayer() {
 
     private val player: ExoPlayer = ExoPlayer.Builder(context).build()
+    private var _seekOnCompletionAfter: Boolean = false
 
     private val listener: Player.Listener = object : Player.Listener {
 
@@ -36,11 +37,6 @@ class Exo_Player constructor(context: Context) : BasePlayer() {
                 else -> {
                 }
             }
-        }
-
-        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-            super.onPlayWhenReadyChanged(playWhenReady, reason)
-            Log.e("PlayerDebug", "playWhenReady=$playWhenReady")
         }
 
         override fun onVideoSizeChanged(videoSize: VideoSize) {
@@ -77,10 +73,16 @@ class Exo_Player constructor(context: Context) : BasePlayer() {
     }
 
     override fun start() {
+        if (getPlayerState() == PlayerState.COMPLETION && !_seekOnCompletionAfter) {
+            seekTo(Long.MIN_VALUE.toInt() + 1)
+        }
         player.play()
     }
 
     override fun seekTo(position: Int) {
+        if (getPlayerState() == PlayerState.COMPLETION) {
+            _seekOnCompletionAfter = true
+        }
         player.seekTo(position.toLong())
     }
 

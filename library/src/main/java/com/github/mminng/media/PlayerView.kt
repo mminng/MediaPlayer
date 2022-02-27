@@ -3,6 +3,7 @@ package com.github.mminng.media
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.util.AttributeSet
 import android.view.*
 import android.widget.FrameLayout
@@ -62,6 +63,22 @@ class PlayerView @JvmOverloads constructor(
                 Gravity.CENTER
             )
         )
+        activity.window.decorView.setOnSystemUiVisibilityChangeListener {
+            if (_isFullScreen && it == View.SYSTEM_UI_FLAG_VISIBLE) {
+                hideSystemBar()
+            }
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration?) {
+        super.onConfigurationChanged(newConfig)
+        if (_isFullScreen) {
+            exitFullScreen()
+        } else {
+            enterFullScreen()
+        }
+        _controller?.onScreenChanged(_isFullScreen)
+        _playerListener?.onScreenChanged(_isFullScreen)
     }
 
     override fun onVideoSizeChanged(width: Int, height: Int) {
@@ -110,11 +127,11 @@ class PlayerView @JvmOverloads constructor(
                 }
             }
             PlayerState.BUFFERING -> {
-                d("Player buffering Start")
+                d("Player buffering start")
                 keepScreenOn = true
             }
             PlayerState.BUFFERED -> {
-                d("Player buffering End")
+                d("Player buffering end")
             }
             PlayerState.RENDERING -> {
                 d("Player rendering")
@@ -123,14 +140,14 @@ class PlayerView @JvmOverloads constructor(
                 d("Player started")
                 playerState[0] = state
                 _controller?.updatePosition()
-                _controller?.onPlayOrPause(true)
+                _controller?.onPlayingChanged(true)
                 _playerListener?.onStarted()
             }
             PlayerState.PAUSED -> {
                 d("Player paused")
                 playerState[0] = state
                 _controller?.stopUpdatePosition()
-                _controller?.onPlayOrPause(false)
+                _controller?.onPlayingChanged(false)
                 _playerListener?.onPaused()
             }
             PlayerState.COMPLETION -> {
@@ -138,7 +155,7 @@ class PlayerView @JvmOverloads constructor(
                 playerState[0] = state
                 _pauseFromUser = true
                 _controller?.stopUpdatePosition()
-                _controller?.onPlayOrPause(false)
+                _controller?.onPlayingChanged(false)
                 _playerListener?.onCompletion()
             }
             PlayerState.ERROR -> {
@@ -147,7 +164,7 @@ class PlayerView @JvmOverloads constructor(
                 keepScreenOn = false
                 _player?.let { _currentRetryPosition = it.getCurrentPosition() }
                 _controller?.stopUpdatePosition()
-                _controller?.onPlayOrPause(false)
+                _controller?.onPlayingChanged(false)
                 _playerListener?.onError(errorMessage)
             }
         }
@@ -181,16 +198,6 @@ class PlayerView @JvmOverloads constructor(
         _player?.statePreparing()
     }
 
-    override fun onPlayerBack() {
-        if (_isFullScreen) {
-            exitFullScreen()
-            _controller?.onScreenChanged(_isFullScreen)
-            _playerListener?.onScreenChanged(_isFullScreen)
-        } else {
-            activity.finish()
-        }
-    }
-
     override fun onPlayOrPause(pauseFromUser: Boolean) {
         if (getPlayerState() == PlayerState.ERROR) return
         _player?.let {
@@ -199,12 +206,28 @@ class PlayerView @JvmOverloads constructor(
                 pause()
             } else {
                 _pauseFromUser = false
-                if (getPlayerState() == PlayerState.COMPLETION) {
-                    //For ExoPlayer
-                    onSeekTo(Long.MIN_VALUE.toInt() + 1)
-                }
                 start()
             }
+        }
+    }
+
+    override fun onScreenChanged() {
+        if (_isFullScreen) {
+            exitFullScreen()
+        } else {
+            enterFullScreen()
+        }
+        _controller?.onScreenChanged(_isFullScreen)
+        _playerListener?.onScreenChanged(_isFullScreen)
+    }
+
+    override fun onPlayerBack() {
+        if (_isFullScreen) {
+            exitFullScreen()
+            _controller?.onScreenChanged(_isFullScreen)
+            _playerListener?.onScreenChanged(_isFullScreen)
+        } else {
+            activity.finish()
         }
     }
 
@@ -217,20 +240,10 @@ class PlayerView @JvmOverloads constructor(
             _player?.let {
                 _currentSpeed = it.getSpeed()
             }
-            setSpeed(3.0F)
+            setSpeed(2.0F)
         } else {
             setSpeed(_currentSpeed)
         }
-    }
-
-    override fun onScreenChanged() {
-        if (_isFullScreen) {
-            exitFullScreen()
-        } else {
-            enterFullScreen()
-        }
-        _controller?.onScreenChanged(_isFullScreen)
-        _playerListener?.onScreenChanged(_isFullScreen)
     }
 
     override fun onSeekTo(position: Int) {
@@ -259,15 +272,9 @@ class PlayerView @JvmOverloads constructor(
         onPrepare(true)
     }
 
-    override fun onVisibilityChanged(changedView: View, visibility: Int) {
-        super.onVisibilityChanged(changedView, visibility)
-        if (visibility == VISIBLE && _isFullScreen) {
-            hideSystemBar()
-        }
-    }
-
     private fun enterFullScreen() {
-        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+//        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+//        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         removeView(playerView)
         activityContentView.addView(
             playerView, LayoutParams(
@@ -278,9 +285,8 @@ class PlayerView @JvmOverloads constructor(
         hideSystemBar()
     }
 
-    @SuppressLint("SourceLockedOrientationActivity")
     private fun exitFullScreen() {
-        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+//        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         activityContentView.removeView(playerView)
         addView(playerView)
         showSystemBar()
@@ -298,32 +304,20 @@ class PlayerView @JvmOverloads constructor(
         }
     }
 
+    @SuppressLint("RestrictedApi")
     private fun hideSystemBar() {
         _isFullScreen = true
-        hideStatusBar()
-        hideNavigationBar()
-    }
-
-    @SuppressLint("RestrictedApi")
-    private fun hideStatusBar() {
         activity.window.setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN
+            WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN
         )
-        val uiOptions = (View.SYSTEM_UI_FLAG_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+        val uiOptions = (View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
         activity.window.decorView.systemUiVisibility = uiOptions
         activity.supportActionBar?.let {
             it.setShowHideAnimationEnabled(false)
             it.hide()
         }
-    }
-
-    private fun hideNavigationBar() {
-        val uiOptions = activity.window.decorView.systemUiVisibility
-        activity.window.decorView.systemUiVisibility =
-            uiOptions or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
     }
 
     /*public function*/

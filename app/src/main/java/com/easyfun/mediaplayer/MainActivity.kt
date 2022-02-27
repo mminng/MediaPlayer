@@ -1,5 +1,6 @@
 package com.easyfun.mediaplayer
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -15,13 +16,9 @@ import com.squareup.picasso.Picasso
 class MainActivity : AppCompatActivity() {
 
     private val localPath: String =
-        "/storage/emulated/0/Quark/Download/bilibili_2051251897.mp4"
+        "/storage/emulated/0/Movies/横屏.mp4"
     private val localPath2: String =
-        "/storage/emulated/0/Quark/Download/bilibili_932148655.mp4"
-    private val localPath3: String =
-        "/storage/emulated/0/Download/4k.mp4"
-    private val localPath4: String =
-        "/storage/emulated/0/Download/60fps_1080p.mp4"
+        "/storage/emulated/0/Movies/竖屏.mp4"
 
     private val playerView: PlayerView by lazy {
         findViewById(R.id.player_view)
@@ -60,9 +57,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-//        val player = DefaultMediaPlayer()
+        val player = DefaultMediaPlayer()
 //        val player = Ijk_Player()
-        val player = Exo_Player(this)
+//        val player = Exo_Player(this)
         playerView.setPlayer(player)
         playerView.setController(controllerView)
 //        controllerView.setCoverViewEnable(true)
@@ -76,12 +73,10 @@ class MainActivity : AppCompatActivity() {
         }
 //        playerView.setDataSource(localPath)
 //        playerView.setDataSource(localPath2)
-//        playerView.setDataSource(localPath3)
-//        playerView.setDataSource(localPath4)
 //        playerView.setDataSource("https://v.96koo.net/common/LzQxOTAvcmVsZWFzZS8yMDIwMDczMC9ETTRCV0cyV3llL0RNNEJXRzJXeWVfODQ4XzgwMA==_19929.m3u8")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
 //        playerView.setDataSource("http://ips.ifeng.com/video19.ifeng.com/video09/2014/06/16/1989823-102-086-0009.mp4")
-        playerView.setDataSource("https://vfx.mtime.cn/Video/2022/01/14/mp4/220114181259659149.mp4")
+        playerView.setDataSource("https://vfx.mtime.cn/Video/2022/02/24/mp4/220224085656529169.mp4")
         playerView.prepare()
         renderMode.setOnClickListener {
             playerView.setRenderMode(RenderMode.FIT)
@@ -133,17 +128,11 @@ class MainActivity : AppCompatActivity() {
 //                Toast.makeText(this@MainActivity, "播放错误$it", Toast.LENGTH_SHORT).show()
             }
         }
-//        playerContent.setOnKeyListener(object : View.OnKeyListener {
-//            override fun onKey(view: View?, keyCode: Int, event: KeyEvent?): Boolean {
-//                if (keyCode == KeyEvent.KEYCODE_BACK && event?.action == KeyEvent.ACTION_DOWN) {
-//                    Toast.makeText(this@MainActivity, "setOnKeyListener", Toast.LENGTH_SHORT).show()
-//                    return true
-//                }
-//                return false
-//            }
-//        })
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+    }
     override fun onBackPressed() {
         if (playerView.canBack()) {
             super.onBackPressed()
