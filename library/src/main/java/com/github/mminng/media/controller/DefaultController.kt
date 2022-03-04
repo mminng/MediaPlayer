@@ -216,6 +216,10 @@ class DefaultController @JvmOverloads constructor(
         }
     }
 
+    override fun release() {
+        super.release()
+    }
+
     private fun addSpeedMenu() {
         addView(speedMenu)
         val speedData: List<Menu<Float>> = listOf(

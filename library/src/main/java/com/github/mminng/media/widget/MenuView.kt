@@ -48,10 +48,9 @@ class MenuView<T> @JvmOverloads constructor(
         menuListview.layoutManager = LinearLayoutManager(context)
         menuListview.adapter = menuAdapter
         menuAdapter.setOnItemClickListener { data, position ->
-            menuAdapter.getData().forEach {
-                it.selected = false
+            menuAdapter.getData().forEachIndexed { index, menu ->
+                menu.selected = index == position
             }
-            data.selected = true
             menuAdapter.notifyDataSetChanged()
             _menuSelectedListener?.invoke(data.value)
             hide()

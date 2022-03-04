@@ -27,7 +27,8 @@ abstract class BaseController @JvmOverloads constructor(
     private var _completionViewEnable: Boolean = false
     private var _errorViewEnable: Boolean = false
     private var _gestureController: Gesture = GestureController(context, attrs)
-    private var _onCoverBindListener: ((view: ImageView) -> Unit)? = null
+    private var _coverBindListener: ((view: ImageView) -> Unit)? = null
+    private var _isControllerReadyListener: (() -> Unit)? = null
     var controllerListener: Controller.Listener? = null
 
     private val controllerView: View by lazy {
@@ -68,6 +69,7 @@ abstract class BaseController @JvmOverloads constructor(
         stateCoverView.visibility = if (_coverViewEnable) VISIBLE else GONE
         _gestureController.setListener(this)
         _controllerIsReady = true
+        _isControllerReadyListener?.invoke()
     }
 
     @LayoutRes
@@ -138,7 +140,7 @@ abstract class BaseController @JvmOverloads constructor(
     }
 
     override fun bindCoverImage(view: ImageView) {
-        _onCoverBindListener?.invoke(view)
+        _coverBindListener?.invoke(view)
     }
 
     override fun onSingleTap() {
@@ -178,6 +180,12 @@ abstract class BaseController @JvmOverloads constructor(
         controllerListener = listener
     }
 
+    override fun setControllerReadyListener(listener: () -> Unit) {
+        if (_isControllerReadyListener == null) {
+            _isControllerReadyListener = listener
+        }
+    }
+
     override fun isControllerReady(): Boolean = _controllerIsReady
 
     override fun onCanBack(): Boolean = true
@@ -203,7 +211,7 @@ abstract class BaseController @JvmOverloads constructor(
     fun getErrorView(): View = stateErrorView
 
     fun setCover(listener: (view: ImageView) -> Unit) {
-        this._onCoverBindListener = listener
+        this._coverBindListener = listener
     }
 
     fun setGestureController(gestureController: Gesture) {

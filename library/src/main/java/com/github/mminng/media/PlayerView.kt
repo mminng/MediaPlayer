@@ -3,7 +3,7 @@ package com.github.mminng.media
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
-import android.content.res.Configuration
+import android.provider.Settings
 import android.util.AttributeSet
 import android.view.*
 import android.widget.FrameLayout
@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.github.mminng.media.controller.Controller
 import com.github.mminng.media.player.OnPlayerListener
 import com.github.mminng.media.player.Player
+import com.github.mminng.media.player.PlayerOrientation
 import com.github.mminng.media.player.PlayerState
 import com.github.mminng.media.renderer.RenderMode
 import com.github.mminng.media.renderer.Renderer
@@ -18,6 +19,7 @@ import com.github.mminng.media.renderer.SurfaceRenderView
 import com.github.mminng.media.renderer.TextureRenderView
 import com.github.mminng.media.utils.d
 import com.github.mminng.media.utils.e
+import com.github.mminng.media.utils.w
 
 /**
  * Created by zh on 2021/10/1.
@@ -31,12 +33,21 @@ class PlayerView @JvmOverloads constructor(
     private var _player: Player? = null
     private var _renderer: Renderer
     private var _controller: Controller? = null
-    private var _isFullScreen: Boolean = false
+    private var _isFullscreen: Boolean = false
+    private var _isLandscapeFromUser: Boolean = false
+    private var _isPortraitFromUser: Boolean = false
+    private var _isForceBack: Boolean = false
+    private val orientationFromInit: Int
+    private var _fullscreenOrientation: PlayerOrientation = PlayerOrientation.LANDSCAPE
+    private var _fullscreenOrientationFromUser: PlayerOrientation = PlayerOrientation.NONE
+    private val orientationListener: OrientationEventListener
     private var _playWhenPrepared: Boolean = false
     private var _pauseFromUser: Boolean = false
     private var _currentDataSource: String = ""
     private var _currentRetryPosition: Int = 0
     private var _currentSpeed: Float = 1.0F
+    private var _videoWidth: Int = 0
+    private var _videoHeight: Int = 0
     private var _playerListener: OnPlayerListener? = null
     private val activity: AppCompatActivity = context as AppCompatActivity
     private val activityContentView: ViewGroup by lazy {
@@ -64,21 +75,68 @@ class PlayerView @JvmOverloads constructor(
             )
         )
         activity.window.decorView.setOnSystemUiVisibilityChangeListener {
-            if (_isFullScreen && it == View.SYSTEM_UI_FLAG_VISIBLE) {
+            if (_isFullscreen && it == View.SYSTEM_UI_FLAG_VISIBLE) {
                 hideSystemBar()
             }
         }
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration?) {
-        super.onConfigurationChanged(newConfig)
-        if (_isFullScreen) {
-            exitFullScreen()
-        } else {
-            enterFullScreen()
+        orientationFromInit = activity.requestedOrientation
+        orientationListener = object : OrientationEventListener(context) {
+            override fun onOrientationChanged(orientation: Int) {
+                if (orientationFromInit == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE ||
+                    _fullscreenOrientation == PlayerOrientation.PORTRAIT
+                ) return
+                val autoRotateOn: Boolean = Settings.System.getInt(
+                    context.contentResolver,
+                    Settings.System.ACCELEROMETER_ROTATION,
+                    0
+                ) == 1
+                if (!autoRotateOn) {
+                    d("autoRotate=OFF")
+                    return
+                }
+                if ((orientation in 0..20) || orientation >= 340) {
+                    //portrait screen
+                    _isLandscapeFromUser = false
+                    if (_isPortraitFromUser) return
+                    if (activity.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) return
+                    requireFullscreen(
+                        fullscreen = false,
+                        fromUser = false,
+                        shouldChangePlayer = _isFullscreen
+                    )
+                } else if (orientation in 250..290) {
+                    //landscape screen
+                    _isPortraitFromUser = false
+                    if (_isLandscapeFromUser) return
+                    if (activity.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) return
+                    if (activity.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE) {
+                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    } else {
+                        requireFullscreen(
+                            fullscreen = true,
+                            fromUser = false,
+                            shouldChangePlayer = !_isFullscreen
+                        )
+                    }
+                } else if (orientation in 70..110) {
+                    //reverse landscape screen
+                    _isPortraitFromUser = false
+                    if (_isLandscapeFromUser) return
+                    if (activity.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE) return
+                    if (activity.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+                        activity.requestedOrientation =
+                            ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+                    } else {
+                        requireFullscreen(
+                            fullscreen = true,
+                            fromUser = false,
+                            reverseLandscape = true,
+                            shouldChangePlayer = !_isFullscreen
+                        )
+                    }
+                }
+            }
         }
-        _controller?.onScreenChanged(_isFullScreen)
-        _playerListener?.onScreenChanged(_isFullScreen)
     }
 
     override fun onVideoSizeChanged(width: Int, height: Int) {
@@ -114,8 +172,22 @@ class PlayerView @JvmOverloads constructor(
             PlayerState.PREPARED -> {
                 d("Player prepared")
                 playerState[0] = state
-                _player?.let { _controller?.onDuration(it.getDuration()) }
                 _playerListener?.onPrepared()
+                _player?.let {
+                    _controller?.onDuration(it.getDuration())
+                    _videoWidth = it.getVideoWidth()
+                    _videoHeight = it.getVideoHeight()
+                }
+                _fullscreenOrientation = if (_videoHeight >= _videoWidth)
+                    PlayerOrientation.PORTRAIT else PlayerOrientation.LANDSCAPE
+                if (_fullscreenOrientationFromUser == PlayerOrientation.UNSPECIFIED) {
+                    requireFullscreen(
+                        fullscreen = true,
+                        fullscreenOrientation = _fullscreenOrientation,
+                        fromUser = false,
+                        shouldChangePlayer = !_isFullscreen
+                    )
+                }
                 if (_currentRetryPosition > 0) {
                     onSeekTo(_currentRetryPosition)
                     _currentRetryPosition = 0
@@ -212,20 +284,28 @@ class PlayerView @JvmOverloads constructor(
     }
 
     override fun onScreenChanged() {
-        if (_isFullScreen) {
-            exitFullScreen()
+        if (_isFullscreen) {
+            requireFullscreen(fullscreen = false)
         } else {
-            enterFullScreen()
+            if (_fullscreenOrientationFromUser == PlayerOrientation.NONE ||
+                _fullscreenOrientationFromUser == PlayerOrientation.UNSPECIFIED
+            ) {
+                requireFullscreen(
+                    fullscreen = true,
+                    fullscreenOrientation = _fullscreenOrientation
+                )
+            } else {
+                requireFullscreen(
+                    fullscreen = true,
+                    fullscreenOrientation = _fullscreenOrientationFromUser
+                )
+            }
         }
-        _controller?.onScreenChanged(_isFullScreen)
-        _playerListener?.onScreenChanged(_isFullScreen)
     }
 
     override fun onPlayerBack() {
-        if (_isFullScreen) {
-            exitFullScreen()
-            _controller?.onScreenChanged(_isFullScreen)
-            _playerListener?.onScreenChanged(_isFullScreen)
+        if (_isFullscreen && !_isForceBack) {
+            requireFullscreen(fullscreen = false)
         } else {
             activity.finish()
         }
@@ -272,29 +352,60 @@ class PlayerView @JvmOverloads constructor(
         onPrepare(true)
     }
 
-    private fun enterFullScreen() {
-//        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-//        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        removeView(playerView)
-        activityContentView.addView(
-            playerView, LayoutParams(
-                LayoutParams.MATCH_PARENT,
-                LayoutParams.MATCH_PARENT
+    @SuppressLint("SourceLockedOrientationActivity")
+    private fun requireFullscreen(
+        fullscreen: Boolean,
+        fullscreenOrientation: PlayerOrientation = PlayerOrientation.LANDSCAPE,
+        fromUser: Boolean = true,
+        reverseLandscape: Boolean = false,
+        shouldChangePlayer: Boolean = true
+    ) {
+        if (fromUser) {
+            _isLandscapeFromUser = true
+            _isPortraitFromUser = true
+        }
+        if (fullscreen) {
+            when (fullscreenOrientation) {
+                PlayerOrientation.NONE,
+                PlayerOrientation.UNSPECIFIED -> {
+                    //NO OP
+                }
+                PlayerOrientation.LANDSCAPE -> {
+                    activity.requestedOrientation =
+                        if (reverseLandscape) ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+                        else ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                }
+                PlayerOrientation.PORTRAIT -> {
+                    if (orientationFromInit != ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                    }
+                }
+            }
+            if (!shouldChangePlayer) return
+            removeView(playerView)
+            activityContentView.addView(
+                playerView, LayoutParams(
+                    LayoutParams.MATCH_PARENT,
+                    LayoutParams.MATCH_PARENT
+                )
             )
-        )
-        hideSystemBar()
-    }
-
-    private fun exitFullScreen() {
-//        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        activityContentView.removeView(playerView)
-        addView(playerView)
-        showSystemBar()
+            hideSystemBar()
+        } else {
+            if (orientationFromInit != ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            }
+            if (!shouldChangePlayer) return
+            activityContentView.removeView(playerView)
+            addView(playerView)
+            showSystemBar()
+        }
+        _controller?.onScreenChanged(_isFullscreen)
+        _playerListener?.onScreenChanged(_isFullscreen)
     }
 
     @SuppressLint("RestrictedApi")
     private fun showSystemBar() {
-        _isFullScreen = false
+        _isFullscreen = false
         activity.window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         val uiOptions = View.SYSTEM_UI_FLAG_VISIBLE
         activity.window.decorView.systemUiVisibility = uiOptions
@@ -306,7 +417,7 @@ class PlayerView @JvmOverloads constructor(
 
     @SuppressLint("RestrictedApi")
     private fun hideSystemBar() {
-        _isFullScreen = true
+        _isFullscreen = true
         activity.window.setFlags(
             WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN
         )
@@ -403,16 +514,55 @@ class PlayerView @JvmOverloads constructor(
         _controller?.let {
             return if (!it.onCanBack()) {
                 false
-            } else if (_isFullScreen) {
-                exitFullScreen()
-                it.onScreenChanged(_isFullScreen)
-                _playerListener?.onScreenChanged(_isFullScreen)
+            } else if (_isFullscreen) {
+                requireFullscreen(false)
                 false
             } else {
                 true
             }
         }
         return true
+    }
+
+    fun setOrientationApplySystem(applySystem: Boolean) {
+        if (applySystem) {
+            orientationListener.enable()
+        } else {
+            orientationListener.disable()
+        }
+    }
+
+    fun setFullscreen(
+        fullscreen: Boolean,
+        fullscreenOrientation: PlayerOrientation = PlayerOrientation.UNSPECIFIED,
+        forceBack: Boolean = false
+    ) {
+        _isForceBack = forceBack
+        _fullscreenOrientationFromUser = fullscreenOrientation
+        _controller?.let {
+            if (it.isControllerReady()) {
+                if (fullscreen == _isFullscreen) return
+                requireFullscreen(
+                    fullscreen = fullscreen,
+                    fullscreenOrientation = fullscreenOrientation,
+                )
+            } else {
+                it.setControllerReadyListener {
+                    if (fullscreen == _isFullscreen) return@setControllerReadyListener
+                    requireFullscreen(
+                        fullscreen = fullscreen,
+                        fullscreenOrientation = fullscreenOrientation,
+                    )
+                }
+            }
+        }
+        if (_controller == null) {
+            if (fullscreen == _isFullscreen) return
+            requireFullscreen(
+                fullscreen = fullscreen,
+                fullscreenOrientation = fullscreenOrientation,
+            )
+        }
     }
 
     fun isPlaying(): Boolean {
@@ -466,6 +616,7 @@ class PlayerView @JvmOverloads constructor(
         _player?.release()
         _controller?.release()
         _renderer.release()
+        orientationListener.disable()
         d("Player released")
     }
     /*public function end*/

@@ -4,7 +4,6 @@ package com.github.mminng.media.player
  * Created by zh on 2021/12/5.
  */
 sealed class PlayerState {
-
     object IDLE : PlayerState()
     object INITIALIZED : PlayerState()
     object PREPARING : PlayerState()
@@ -16,5 +15,4 @@ sealed class PlayerState {
     object PAUSED : PlayerState()
     object COMPLETION : PlayerState()
     object ERROR : PlayerState()
-
 }

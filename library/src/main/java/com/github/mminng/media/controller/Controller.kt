@@ -48,6 +48,8 @@ interface Controller {
 
     fun stopUpdatePosition()
 
+    fun setControllerReadyListener(listener: () -> Unit)
+
     fun isControllerReady(): Boolean
 
     fun onCanBack(): Boolean

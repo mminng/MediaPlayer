@@ -1,7 +1,7 @@
 package com.easyfun.mediaplayer
 
-import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.github.mminng.media.controller.DefaultController
 import com.github.mminng.media.PlayerView
 import com.github.mminng.media.player.DefaultMediaPlayer
+import com.github.mminng.media.player.PlayerOrientation
 import com.github.mminng.media.renderer.RenderMode
 import com.squareup.picasso.Picasso
 
@@ -19,6 +20,8 @@ class MainActivity : AppCompatActivity() {
         "/storage/emulated/0/Movies/横屏.mp4"
     private val localPath2: String =
         "/storage/emulated/0/Movies/竖屏.mp4"
+    private val localPath3: String =
+        "/storage/emulated/0/Quark/Download/竖屏测试.mp4"
 
     private val playerView: PlayerView by lazy {
         findViewById(R.id.player_view)
@@ -60,8 +63,10 @@ class MainActivity : AppCompatActivity() {
         val player = DefaultMediaPlayer()
 //        val player = Ijk_Player()
 //        val player = Exo_Player(this)
+        playerView.setOrientationApplySystem(true)
         playerView.setPlayer(player)
         playerView.setController(controllerView)
+        playerView.setFullscreen(true, PlayerOrientation.PORTRAIT, true)
 //        controllerView.setCoverViewEnable(true)
 //        controllerView.setTopControllerVisibility(View.VISIBLE)
         controllerView.setCoverPlayButtonResource(R.drawable.ic_action_paused)
@@ -73,6 +78,7 @@ class MainActivity : AppCompatActivity() {
         }
 //        playerView.setDataSource(localPath)
 //        playerView.setDataSource(localPath2)
+//        playerView.setDataSource(localPath3)
 //        playerView.setDataSource("https://v.96koo.net/common/LzQxOTAvcmVsZWFzZS8yMDIwMDczMC9ETTRCV0cyV3llL0RNNEJXRzJXeWVfODQ4XzgwMA==_19929.m3u8")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
 //        playerView.setDataSource("http://ips.ifeng.com/video19.ifeng.com/video09/2014/06/16/1989823-102-086-0009.mp4")
@@ -103,9 +109,10 @@ class MainActivity : AppCompatActivity() {
         setSpeed.setOnClickListener {
             playerView.setSpeed(2.0F)
         }
+//        playerView.setOrientationApplySystem(false)
         playerView.setOnPlayerListener {
             prepared {
-//                Toast.makeText(this@MainActivity, "准备就绪", Toast.LENGTH_SHORT).show()
+
             }
             started {
 //                Toast.makeText(this@MainActivity, "播放", Toast.LENGTH_SHORT).show()
@@ -120,6 +127,7 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     controllerView.setTopControllerVisibility(View.INVISIBLE)
                 }
+                Log.e("PlayerDebug", "screenChanged=$it")
             }
             completion {
 //                Toast.makeText(this@MainActivity, "播放完成", Toast.LENGTH_SHORT).show()
@@ -128,11 +136,11 @@ class MainActivity : AppCompatActivity() {
 //                Toast.makeText(this@MainActivity, "播放错误$it", Toast.LENGTH_SHORT).show()
             }
         }
+//        Handler().postDelayed({
+//            playerView.setFullScreen(false)
+//        }, 5 * 1000)
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-    }
     override fun onBackPressed() {
         if (playerView.canBack()) {
             super.onBackPressed()

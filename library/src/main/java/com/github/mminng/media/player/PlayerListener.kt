@@ -11,7 +11,7 @@ interface PlayerListener {
 
     fun onPaused()
 
-    fun onScreenChanged(isFullScreen: Boolean)
+    fun onScreenChanged(fullscreen: Boolean)
 
     fun onCompletion()
 
@@ -24,7 +24,7 @@ class OnPlayerListener : PlayerListener {
     private var _prepared: (() -> Unit)? = null
     private var _started: (() -> Unit)? = null
     private var _paused: (() -> Unit)? = null
-    private var _screenChanged: ((isFullScreen: Boolean) -> Unit)? = null
+    private var _screenChanged: ((fullscreen: Boolean) -> Unit)? = null
     private var _completion: (() -> Unit)? = null
     private var _error: ((errorMessage: String) -> Unit)? = null
 
@@ -40,8 +40,8 @@ class OnPlayerListener : PlayerListener {
         _paused?.invoke()
     }
 
-    override fun onScreenChanged(isFullScreen: Boolean) {
-        _screenChanged?.invoke(isFullScreen)
+    override fun onScreenChanged(fullscreen: Boolean) {
+        _screenChanged?.invoke(fullscreen)
     }
 
     override fun onCompletion() {
@@ -64,7 +64,7 @@ class OnPlayerListener : PlayerListener {
         _paused = listener
     }
 
-    fun screenChanged(listener: (isFullScreen: Boolean) -> Unit) {
+    fun screenChanged(listener: (fullscreen: Boolean) -> Unit) {
         _screenChanged = listener
     }
 
