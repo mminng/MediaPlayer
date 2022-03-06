@@ -63,13 +63,15 @@ class MainActivity : AppCompatActivity() {
         val player = DefaultMediaPlayer()
 //        val player = Ijk_Player()
 //        val player = Exo_Player(this)
-        playerView.setOrientationApplySystem(true)
+//        playerView.setOrientationApplySystem(true)
         playerView.setPlayer(player)
         playerView.setController(controllerView)
-        playerView.setFullscreen(true, PlayerOrientation.PORTRAIT, true)
+        playerView.setFullscreen(true)
+        playerView.setBackNeedFinish(true)
 //        controllerView.setCoverViewEnable(true)
 //        controllerView.setTopControllerVisibility(View.VISIBLE)
         controllerView.setCoverPlayButtonResource(R.drawable.ic_action_paused)
+        controllerView.setTopControllerVisibility(View.VISIBLE)
         controllerView.setTitle("好莱坞往事")
         controllerView.setCover {
             Picasso.get()
@@ -122,11 +124,11 @@ class MainActivity : AppCompatActivity() {
             }
             screenChanged {
 //                Toast.makeText(this@MainActivity, if (it) "全屏" else "小屏", Toast.LENGTH_SHORT).show()
-                if (it) {
-                    controllerView.setTopControllerVisibility(View.VISIBLE)
-                } else {
-                    controllerView.setTopControllerVisibility(View.INVISIBLE)
-                }
+//                if (it) {
+//                    controllerView.setTopControllerVisibility(View.VISIBLE)
+//                } else {
+//                    controllerView.setTopControllerVisibility(View.INVISIBLE)
+//                }
                 Log.e("PlayerDebug", "screenChanged=$it")
             }
             completion {

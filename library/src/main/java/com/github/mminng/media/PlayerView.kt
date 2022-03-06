@@ -19,7 +19,6 @@ import com.github.mminng.media.renderer.SurfaceRenderView
 import com.github.mminng.media.renderer.TextureRenderView
 import com.github.mminng.media.utils.d
 import com.github.mminng.media.utils.e
-import com.github.mminng.media.utils.w
 
 /**
  * Created by zh on 2021/10/1.
@@ -34,9 +33,9 @@ class PlayerView @JvmOverloads constructor(
     private var _renderer: Renderer
     private var _controller: Controller? = null
     private var _isFullscreen: Boolean = false
-    private var _isLandscapeFromUser: Boolean = false
-    private var _isPortraitFromUser: Boolean = false
-    private var _isForceBack: Boolean = false
+    private var _isLandscape: Boolean = false
+    private var _isPortrait: Boolean = true
+    private var _needFinish: Boolean = false
     private val orientationFromInit: Int
     private var _fullscreenOrientation: PlayerOrientation = PlayerOrientation.LANDSCAPE
     private var _fullscreenOrientationFromUser: PlayerOrientation = PlayerOrientation.NONE
@@ -46,8 +45,6 @@ class PlayerView @JvmOverloads constructor(
     private var _currentDataSource: String = ""
     private var _currentRetryPosition: Int = 0
     private var _currentSpeed: Float = 1.0F
-    private var _videoWidth: Int = 0
-    private var _videoHeight: Int = 0
     private var _playerListener: OnPlayerListener? = null
     private val activity: AppCompatActivity = context as AppCompatActivity
     private val activityContentView: ViewGroup by lazy {
@@ -91,23 +88,23 @@ class PlayerView @JvmOverloads constructor(
                     0
                 ) == 1
                 if (!autoRotateOn) {
-                    d("autoRotate=OFF")
+                    d("systemAutoRotate=OFF")
                     return
                 }
                 if ((orientation in 0..20) || orientation >= 340) {
                     //portrait screen
-                    _isLandscapeFromUser = false
-                    if (_isPortraitFromUser) return
+                    _isLandscape = false
+                    if (_isPortrait) return
                     if (activity.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) return
                     requireFullscreen(
                         fullscreen = false,
                         fromUser = false,
                         shouldChangePlayer = _isFullscreen
                     )
-                } else if (orientation in 250..290) {
+                } else if (orientation in 240..300) {
                     //landscape screen
-                    _isPortraitFromUser = false
-                    if (_isLandscapeFromUser) return
+                    _isPortrait = false
+                    if (_isLandscape) return
                     if (activity.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) return
                     if (activity.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE) {
                         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -118,10 +115,10 @@ class PlayerView @JvmOverloads constructor(
                             shouldChangePlayer = !_isFullscreen
                         )
                     }
-                } else if (orientation in 70..110) {
+                } else if (orientation in 60..120) {
                     //reverse landscape screen
-                    _isPortraitFromUser = false
-                    if (_isLandscapeFromUser) return
+                    _isPortrait = false
+                    if (_isLandscape) return
                     if (activity.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE) return
                     if (activity.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
                         activity.requestedOrientation =
@@ -175,11 +172,9 @@ class PlayerView @JvmOverloads constructor(
                 _playerListener?.onPrepared()
                 _player?.let {
                     _controller?.onDuration(it.getDuration())
-                    _videoWidth = it.getVideoWidth()
-                    _videoHeight = it.getVideoHeight()
+                    _fullscreenOrientation = if (it.getVideoHeight() >= it.getVideoWidth())
+                        PlayerOrientation.PORTRAIT else PlayerOrientation.LANDSCAPE
                 }
-                _fullscreenOrientation = if (_videoHeight >= _videoWidth)
-                    PlayerOrientation.PORTRAIT else PlayerOrientation.LANDSCAPE
                 if (_fullscreenOrientationFromUser == PlayerOrientation.UNSPECIFIED) {
                     requireFullscreen(
                         fullscreen = true,
@@ -227,6 +222,7 @@ class PlayerView @JvmOverloads constructor(
                 playerState[0] = state
                 _pauseFromUser = true
                 _controller?.stopUpdatePosition()
+                _controller?.onCurrentPosition(getDuration())
                 _controller?.onPlayingChanged(false)
                 _playerListener?.onCompletion()
             }
@@ -304,7 +300,7 @@ class PlayerView @JvmOverloads constructor(
     }
 
     override fun onPlayerBack() {
-        if (_isFullscreen && !_isForceBack) {
+        if (_isFullscreen && !_needFinish) {
             requireFullscreen(fullscreen = false)
         } else {
             activity.finish()
@@ -361,15 +357,11 @@ class PlayerView @JvmOverloads constructor(
         shouldChangePlayer: Boolean = true
     ) {
         if (fromUser) {
-            _isLandscapeFromUser = true
-            _isPortraitFromUser = true
+            _isLandscape = true
+            _isPortrait = true
         }
         if (fullscreen) {
             when (fullscreenOrientation) {
-                PlayerOrientation.NONE,
-                PlayerOrientation.UNSPECIFIED -> {
-                    //NO OP
-                }
                 PlayerOrientation.LANDSCAPE -> {
                     activity.requestedOrientation =
                         if (reverseLandscape) ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
@@ -379,6 +371,10 @@ class PlayerView @JvmOverloads constructor(
                     if (orientationFromInit != ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
                         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                     }
+                }
+                PlayerOrientation.NONE,
+                PlayerOrientation.UNSPECIFIED -> {
+                    //NO OP
                 }
             }
             if (!shouldChangePlayer) return
@@ -514,7 +510,7 @@ class PlayerView @JvmOverloads constructor(
         _controller?.let {
             return if (!it.onCanBack()) {
                 false
-            } else if (_isFullscreen) {
+            } else if (_isFullscreen && !_needFinish) {
                 requireFullscreen(false)
                 false
             } else {
@@ -532,12 +528,14 @@ class PlayerView @JvmOverloads constructor(
         }
     }
 
+    fun setBackNeedFinish(needFinish: Boolean) {
+        _needFinish = needFinish
+    }
+
     fun setFullscreen(
         fullscreen: Boolean,
         fullscreenOrientation: PlayerOrientation = PlayerOrientation.UNSPECIFIED,
-        forceBack: Boolean = false
     ) {
-        _isForceBack = forceBack
         _fullscreenOrientationFromUser = fullscreenOrientation
         _controller?.let {
             if (it.isControllerReady()) {
