@@ -10,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.github.mminng.media.controller.DefaultController
 import com.github.mminng.media.PlayerView
 import com.github.mminng.media.player.DefaultMediaPlayer
-import com.github.mminng.media.player.PlayerOrientation
 import com.github.mminng.media.renderer.RenderMode
 import com.squareup.picasso.Picasso
 
@@ -63,16 +62,17 @@ class MainActivity : AppCompatActivity() {
         val player = DefaultMediaPlayer()
 //        val player = Ijk_Player()
 //        val player = Exo_Player(this)
-//        playerView.setOrientationApplySystem(true)
+        playerView.setOrientationApplySystem(true)
         playerView.setPlayer(player)
         playerView.setController(controllerView)
-        playerView.setFullscreen(true)
-        playerView.setBackNeedFinish(true)
+//        playerView.setBackNeedFinish(true)
 //        controllerView.setCoverViewEnable(true)
 //        controllerView.setTopControllerVisibility(View.VISIBLE)
+        controllerView.setGestureEnable(true)
         controllerView.setCoverPlayButtonResource(R.drawable.ic_action_paused)
-        controllerView.setTopControllerVisibility(View.VISIBLE)
+        controllerView.setStyleColor(R.color.purple_200)
         controllerView.setTitle("好莱坞往事")
+        controllerView.setTopControllerEnable(false)
         controllerView.setCover {
             Picasso.get()
                 .load("https://images.unsplash.com/photo-1634334181759-a965220b6a91?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHx0b3BpYy1mZWVkfDExfGJEbzQ4Y1Vod25ZfHxlbnwwfHx8fA%3D%3D&auto=format&fit=crop&w=500&q=60")

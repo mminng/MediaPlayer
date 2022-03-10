@@ -7,6 +7,10 @@ import android.view.View
  */
 interface Gesture {
 
+    fun setGestureEnable(enable: Boolean)
+
+    fun getGestureEnable(): Boolean
+
     fun getView(): View
 
     fun setListener(listener: Listener)
@@ -18,5 +22,20 @@ interface Gesture {
         fun onDoubleTap()
 
         fun onLongTap(isTouch: Boolean)
+
+        fun onSwipeProgressView(
+            show: Boolean,
+            currentPosition: Int,
+            duration: Int,
+            canSeek: Boolean = false
+        )
+
+        fun onSwipeBrightnessView(show: Boolean, progress: Int, max: Int)
+
+        fun onSwipeVolumeView(show: Boolean, progress: Int, max: Int)
+
+        fun getCurrentPosition(): Int
+
+        fun getDuration(): Int
     }
 }

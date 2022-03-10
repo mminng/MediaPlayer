@@ -49,7 +49,7 @@ interface Player {
 
         fun onPlayerStateChanged(state: PlayerState, errorMessage: String = "none")
 
-        fun onPlayerState(): PlayerState
+        fun requirePlayerState(): PlayerState
     }
 
     fun videoSizeChanged(width: Int, height: Int)

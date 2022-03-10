@@ -149,6 +149,7 @@ class PlayerView @JvmOverloads constructor(
                 d("Player idle")
                 playerState[0] = state
                 _controller?.stopUpdatePosition()
+                _controller?.onPlayingChanged(false)
             }
             PlayerState.INITIALIZED -> {
                 d("Player initialized")
@@ -244,7 +245,11 @@ class PlayerView @JvmOverloads constructor(
         }
     }
 
-    override fun onPlayerState(): PlayerState = playerState[0]
+    override fun requirePlayerState(): PlayerState = getPlayerState()
+
+    override fun requireCurrentPosition(): Int = getCurrentPosition()
+
+    override fun requireDuration(): Int = getDuration()
 
     override fun onRenderCreated(surface: Surface) {
         _player?.setSurface(surface)
@@ -320,6 +325,10 @@ class PlayerView @JvmOverloads constructor(
         } else {
             setSpeed(_currentSpeed)
         }
+    }
+
+    override fun onChangeRenderMode(renderMode: RenderMode) {
+        setRenderMode(renderMode)
     }
 
     override fun onSeekTo(position: Int) {
@@ -607,7 +616,7 @@ class PlayerView @JvmOverloads constructor(
         return 0
     }
 
-    fun getPlayerState(): PlayerState = onPlayerState()
+    fun getPlayerState(): PlayerState = playerState[0]
 
     fun release() {
         _player?.setSurface(null)

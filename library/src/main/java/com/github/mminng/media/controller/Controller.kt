@@ -4,6 +4,7 @@ import android.view.View
 import android.widget.ImageView
 import androidx.annotation.LayoutRes
 import com.github.mminng.media.player.PlayerState
+import com.github.mminng.media.renderer.RenderMode
 
 /**
  * Created by zh on 2021/10/1.
@@ -29,6 +30,36 @@ interface Controller {
     fun onShowController()
 
     fun onHideController()
+
+    fun changeRenderMode(renderMode: RenderMode)
+
+    fun seekTo(position: Int)
+
+    fun playerBack()
+
+    fun playOrPause(pauseFromUser: Boolean = false)
+
+    fun screenChanged()
+
+    fun changeSpeed(speed: Float)
+
+    fun prepare(playWhenPrepared: Boolean = false)
+
+    fun replay()
+
+    fun retry()
+
+    @LayoutRes
+    fun setSwipeProgressView(): Int
+
+    @LayoutRes
+    fun setSwipeBrightnessView(): Int
+
+    @LayoutRes
+    fun setSwipeVolumeView(): Int
+
+    @LayoutRes
+    fun setTouchSpeedView(): Int
 
     @LayoutRes
     fun setCoverView(): Int
@@ -76,6 +107,8 @@ interface Controller {
 
         fun onTouchSpeed(isTouch: Boolean)
 
+        fun onChangeRenderMode(renderMode: RenderMode)
+
         fun onSeekTo(position: Int)
 
         fun onPositionUpdated()
@@ -84,7 +117,11 @@ interface Controller {
 
         fun onRetry()
 
-        fun onPlayerState(): PlayerState
+        fun requirePlayerState(): PlayerState
+
+        fun requireCurrentPosition(): Int
+
+        fun requireDuration(): Int
     }
 
 }

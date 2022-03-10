@@ -25,7 +25,7 @@ class MenuView<T> @JvmOverloads constructor(
 
     private val menuListview = ListView(context)
     private val menuAdapter = MenuAdapter<T>()
-    private var _menuSelectedListener: ((value: T) -> Unit)? = null
+    private var _menuSelectedListener: ((text: String, value: T) -> Unit)? = null
 
     init {
         isClickable = true
@@ -55,13 +55,16 @@ class MenuView<T> @JvmOverloads constructor(
                     menu.selected = index == position
                 }
                 menuAdapter.notifyDataSetChanged()
-                _menuSelectedListener?.invoke(menuAdapter.getData()[position].value)
+                _menuSelectedListener?.invoke(
+                    menuAdapter.getData()[position].text,
+                    menuAdapter.getData()[position].value
+                )
             }
             hide()
         }
     }
 
-    fun setOnMenuSelectedListener(listener: ((value: T) -> Unit)) {
+    fun setOnMenuSelectedListener(listener: ((text: String, value: T) -> Unit)) {
         if (_menuSelectedListener === listener) return
         _menuSelectedListener = listener
     }

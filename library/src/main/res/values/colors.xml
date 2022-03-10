@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="item_menu_data" type="id" />
+    <color name="teal">#FF03DAC5</color>
 </resources>

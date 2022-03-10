@@ -41,11 +41,6 @@ class TestFragment : Fragment() {
         playerView.prepare()
         playerView.setOnPlayerListener {
             screenChanged {
-                if (it) {
-                    controllerView.setTopControllerVisibility(View.VISIBLE)
-                } else {
-                    controllerView.setTopControllerVisibility(View.INVISIBLE)
-                }
             }
         }
         controllerView.setTitle("https://vfx.mtime.cn/Video/2021/12/23/mp4/211223160113712148.mp4-https://vfx.mtime.cn/Video/2021/12/23/mp4/211223160113712148.mp4")

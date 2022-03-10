@@ -1,16 +1,21 @@
 package com.github.mminng.media.controller
 
+import android.animation.Animator
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.SeekBar
-import android.widget.TextView
+import android.view.animation.LinearInterpolator
+import android.widget.*
+import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
+import androidx.core.content.ContextCompat
 import com.github.mminng.media.R
 import com.github.mminng.media.player.PlayerState
 import com.github.mminng.media.utils.convertMillis
+import com.github.mminng.media.utils.e
 import com.github.mminng.media.widget.MarqueeTextView
 import com.github.mminng.media.widget.Menu
 import com.github.mminng.media.widget.MenuView
@@ -18,6 +23,7 @@ import com.github.mminng.media.widget.MenuView
 /**
  * Created by zh on 2021/9/20.
  */
+@SuppressLint("UseCompatLoadingForColorStateLists")
 class DefaultController @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : BaseController(context, attrs), View.OnClickListener, SeekBar.OnSeekBarChangeListener {
@@ -55,12 +61,45 @@ class DefaultController @JvmOverloads constructor(
     private val errorMessageView: TextView by lazy {
         getErrorView().findViewById(R.id.default_error_message)
     }
+    private val bufferView: ProgressBar by lazy {
+        getBufferView().findViewById(R.id.media_buffer)
+    }
+    private val progressText: TextView by lazy {
+        getSwipeProgressView().findViewById(R.id.swipe_progress_text)
+    }
+    private val brightnessBar: ProgressBar by lazy {
+        getSwipeBrightnessView().findViewById(R.id.swipe_brightness_bar)
+    }
+    private val volumeIcon: ImageView by lazy {
+        getSwipeVolumeView().findViewById(R.id.swipe_volume_icon)
+    }
+    private val volumeBar: ProgressBar by lazy {
+        getSwipeVolumeView().findViewById(R.id.swipe_volume_bar)
+    }
+    private val touchSpeedView: LinearLayout by lazy {
+        getTouchSpeedView().findViewById(R.id.media_touch_speed)
+    }
+    private val touchSpeedIcon: ImageView by lazy {
+        getTouchSpeedView().findViewById(R.id.media_touch_speed_icon)
+    }
 
+    private var _activeColor: Int = R.color.teal
     private var _seekFromUser: Boolean = false
+    private var _isFullScreen: Boolean = false
+    private var _topEnable: Boolean = true
+    private var _speedEnable: Boolean = true
     private var _titleStr: String = ""
-    private var _topControllerVisibility: Int = View.GONE
-    private var _bottomControllerVisibility: Int = View.VISIBLE
+    private var touchSpeedIconAnimator: ValueAnimator =
+        ObjectAnimator.ofFloat(touchSpeedIcon, "alpha", 1.0F, 0.3F)
     private val speedMenu: MenuView<Float> = MenuView(context)
+    private var _speedData: List<Menu<Float>> = listOf(
+        Menu(false, "2.0X", 2.0F),
+        Menu(false, "1.5X", 1.5F),
+        Menu(false, "1.25X", 1.25F),
+        Menu(true, "1.0X", 1.0F),
+        Menu(false, "0.75X", 0.75F),
+        Menu(false, "0.5X", 0.5F)
+    )
 
     override fun setControllerLayout(): Int {
         return R.layout.default_controller_layout
@@ -73,13 +112,16 @@ class DefaultController @JvmOverloads constructor(
         fullScreenView.setOnClickListener(this)
         speedView.setOnClickListener(this)
         timeBar.setOnSeekBarChangeListener(this)
+        bufferView.indeterminateTintList = resources.getColorStateList(_activeColor)
         bindCoverView()
         bindCompletionView()
         bindErrorView()
         addSpeedMenu()
-        topControllerView.visibility = _topControllerVisibility
-        bottomControllerView.visibility = _bottomControllerVisibility
+        topControllerView.visibility = if (_topEnable) VISIBLE else GONE
         titleView.text = _titleStr
+        touchSpeedIconAnimator.duration = 700
+        touchSpeedIconAnimator.repeatCount = ValueAnimator.INFINITE
+        touchSpeedIconAnimator.repeatMode = ValueAnimator.REVERSE
     }
 
     override fun onStartTrackingTouch(seekBar: SeekBar?) {
@@ -97,7 +139,7 @@ class DefaultController @JvmOverloads constructor(
         _seekFromUser = false
         showController()
         seekBar?.let {
-            controllerListener?.onSeekTo(it.progress)
+            seekTo(it.progress)
         }
     }
 
@@ -105,15 +147,15 @@ class DefaultController @JvmOverloads constructor(
         when (v) {
             backView -> {
                 showController()
-                controllerListener?.onPlayerBack()
+                playerBack()
             }
             playPauseView -> {
                 showController()
-                controllerListener?.onPlayOrPause(true)
+                playOrPause(true)
             }
             fullScreenView -> {
                 showController()
-                controllerListener?.onScreenChanged()
+                screenChanged()
             }
             speedView -> {
                 hideController()
@@ -150,12 +192,21 @@ class DefaultController @JvmOverloads constructor(
     }
 
     override fun onScreenChanged(isFullScreen: Boolean) {
+        _isFullScreen = isFullScreen
         if (isFullScreen) {
-            fullScreenView.setImageResource(R.drawable.ic_action_fullscreen_exit)
-            speedView.visibility = VISIBLE
+            fullScreenView.visibility = GONE
+            if (_speedEnable) {
+                speedView.visibility = VISIBLE
+            }
+            if (bottomControllerView.visibility == VISIBLE) {
+                topControllerView.visibility = VISIBLE
+            }
         } else {
-            fullScreenView.setImageResource(R.drawable.ic_action_fullscreen)
+            fullScreenView.visibility = VISIBLE
             speedView.visibility = GONE
+            if (!_topEnable) {
+                topControllerView.visibility = GONE
+            }
         }
     }
 
@@ -173,62 +224,133 @@ class DefaultController @JvmOverloads constructor(
     }
 
     override fun onShowController() {
-        if (_topControllerVisibility == View.VISIBLE) {
-            setTopControllerVisibility(View.VISIBLE)
-        }
-        setBottomControllerVisibility(View.VISIBLE)
+        setTopVisibility(View.VISIBLE)
+        setBottomVisibility(View.VISIBLE)
     }
 
     override fun onHideController() {
-        setTopControllerVisibility(View.GONE, false)
-        setBottomControllerVisibility(View.GONE)
+        setTopVisibility(View.GONE)
+        setBottomVisibility(View.GONE)
     }
 
     override fun onSingleTap() {
-        if (speedMenu.isShowing()) {
-            speedMenu.hide()
-        } else {
-            super.onSingleTap()
+        when {
+            speedMenu.isShowing() -> {
+                speedMenu.hide()
+            }
+            else -> {
+                super.onSingleTap()
+            }
         }
     }
 
     override fun onDoubleTap() {
-        if (speedMenu.isShowing()) {
-            speedMenu.hide()
-        } else {
-            super.onDoubleTap()
+        when {
+            speedMenu.isShowing() -> {
+                speedMenu.hide()
+            }
+            else -> {
+                super.onDoubleTap()
+            }
         }
     }
 
     override fun onLongTap(isTouch: Boolean) {
+        super.onLongTap(isTouch)
         if (speedMenu.isShowing()) {
             speedMenu.hide()
         }
-        super.onLongTap(isTouch)
+        if (isTouch) {
+            touchSpeedView.visibility = VISIBLE
+            touchSpeedIconAnimator.start()
+        } else {
+            touchSpeedView.visibility = GONE
+            touchSpeedIconAnimator.cancel()
+        }
+    }
+
+    override fun onSwipeProgressView(
+        show: Boolean,
+        currentPosition: Int,
+        duration: Int,
+        canSeek: Boolean
+    ) {
+        if (show) {
+            if (getSwipeProgressView().visibility != VISIBLE) {
+                getSwipeProgressView().visibility = VISIBLE
+            }
+            "${convertMillis(currentPosition)}/${convertMillis(duration)}".also {
+                progressText.text = it
+            }
+        } else {
+            if (getSwipeProgressView().visibility != GONE) {
+                getSwipeProgressView().visibility = GONE
+            }
+            if (canSeek) {
+                seekTo(currentPosition)
+            }
+        }
+    }
+
+    override fun onSwipeBrightnessView(show: Boolean, progress: Int, max: Int) {
+        if (show) {
+            if (getSwipeBrightnessView().visibility != VISIBLE) {
+                getSwipeBrightnessView().visibility = VISIBLE
+                brightnessBar.max = max
+            }
+            brightnessBar.progress = progress
+        } else {
+            if (getSwipeBrightnessView().visibility != GONE) {
+                getSwipeBrightnessView().visibility = GONE
+            }
+        }
+    }
+
+    override fun onSwipeVolumeView(show: Boolean, progress: Int, max: Int) {
+        if (show) {
+            if (getSwipeVolumeView().visibility != VISIBLE) {
+                getSwipeVolumeView().visibility = VISIBLE
+                volumeBar.max = max
+            }
+            if (progress > 0) {
+                volumeIcon.setImageResource(R.drawable.ic_volume_on)
+            } else {
+                volumeIcon.setImageResource(R.drawable.ic_volume_mute)
+            }
+            volumeBar.progress = progress
+        } else {
+            if (getSwipeVolumeView().visibility != GONE) {
+                getSwipeVolumeView().visibility = GONE
+            }
+        }
     }
 
     override fun onCanBack(): Boolean {
-        return if (speedMenu.isShowing()) {
-            speedMenu.hide()
-            false
-        } else {
-            super.onCanBack()
+        return when {
+            speedMenu.isShowing() -> {
+                speedMenu.hide()
+                false
+            }
+            else -> {
+                super.onCanBack()
+            }
         }
     }
 
     private fun addSpeedMenu() {
         addView(speedMenu)
-        val speedData: List<Menu<Float>> = listOf(
-            Menu(false, "2.0X", 2.0F),
-            Menu(false, "1.5X", 1.5F),
-            Menu(false, "1.25X", 1.25F),
-            Menu(true, "1.0X", 1.0F),
-            Menu(false, "0.75X", 0.75F),
-            Menu(false, "0.5X", 0.5F)
-        )
-        speedMenu.setMenuData(speedData)
-        speedMenu.setOnMenuSelectedListener {
-            controllerListener?.onChangeSpeed(it)
+        speedMenu.setSelectedColor(ContextCompat.getColor(context, _activeColor))
+        speedMenu.setMenuData(_speedData)
+        speedMenu.setOnMenuSelectedListener { text, value ->
+            if (value == 1.0F) {
+                speedView.text = resources.getString(R.string.player_speed)
+            } else {
+                speedView.text = text
+            }
+            changeSpeed(value)
+        }
+        if (_isFullScreen) {
+            if (_speedEnable) speedView.visibility = VISIBLE else speedMenu.visibility = GONE
         }
     }
 
@@ -238,7 +360,7 @@ class DefaultController @JvmOverloads constructor(
         play.setOnClickListener {
             if (getPlayerState() != PlayerState.INITIALIZED) return@setOnClickListener
             getCoverView().visibility = GONE
-            controllerListener?.onPrepare(true)
+            prepare(true)
         }
         bindCoverImage(cover)
     }
@@ -248,7 +370,7 @@ class DefaultController @JvmOverloads constructor(
             getCompletionView().findViewById(R.id.default_completion_replay_button)
         replay.setOnClickListener {
             getCompletionView().visibility = GONE
-            controllerListener?.onReplay()
+            replay()
         }
     }
 
@@ -256,7 +378,32 @@ class DefaultController @JvmOverloads constructor(
         val retry: TextView = getErrorView().findViewById(R.id.default_error_retry_button)
         retry.setOnClickListener {
             getErrorView().visibility = GONE
-            controllerListener?.onRetry()
+            retry()
+        }
+    }
+
+    private fun setTopVisibility(visibility: Int) {
+        if (isControllerReady()) {
+            if (_isFullScreen) {
+                topControllerView.visibility = visibility
+            } else {
+                if (_topEnable) {
+                    topControllerView.visibility = visibility
+                } else {
+                    topControllerView.visibility = GONE
+                }
+            }
+            if (visibility == View.VISIBLE) {
+                titleView.marquee()
+            } else {
+                titleView.cancel()
+            }
+        }
+    }
+
+    private fun setBottomVisibility(visibility: Int) {
+        if (isControllerReady()) {
+            bottomControllerView.visibility = visibility
         }
     }
 
@@ -267,30 +414,42 @@ class DefaultController @JvmOverloads constructor(
         }
     }
 
+    fun setSpeedData(speedData: List<Menu<Float>>) {
+        _speedData = speedData
+        if (isControllerReady()) {
+            speedMenu.setMenuData(speedData)
+        }
+    }
+
+    fun setSpeedEnable(enable: Boolean) {
+        _speedEnable = enable
+        if (isControllerReady() && _isFullScreen) {
+            if (enable) speedView.visibility = VISIBLE else speedMenu.visibility = GONE
+        }
+    }
+
+    fun setStyleColor(@ColorRes activeColor: Int) {
+        _activeColor = activeColor
+        if (isControllerReady()) {
+            speedMenu.setSelectedColor(ContextCompat.getColor(context, activeColor))
+            bufferView.indeterminateTintList = resources.getColorStateList(activeColor)
+        }
+    }
+
     fun setCoverPlayButtonResource(@DrawableRes res: Int) {
         getCoverView()
             .findViewById<ImageView>(R.id.default_cover_play_imageview)
             .setImageResource(res)
     }
 
-    fun setTopControllerVisibility(visibility: Int, syncVisibility: Boolean = true) {
-        if (syncVisibility) {
-            _topControllerVisibility = visibility
-        }
+    fun setTopControllerEnable(enable: Boolean) {
+        _topEnable = enable
         if (isControllerReady()) {
-            topControllerView.visibility = visibility
-            if (visibility == View.VISIBLE) {
-                titleView.marquee()
+            if (enable) {
+                topControllerView.visibility = VISIBLE
             } else {
-                titleView.cancel()
+                topControllerView.visibility = GONE
             }
-        }
-    }
-
-    fun setBottomControllerVisibility(visibility: Int) {
-        _bottomControllerVisibility = visibility
-        if (isControllerReady()) {
-            bottomControllerView.visibility = visibility
         }
     }
 

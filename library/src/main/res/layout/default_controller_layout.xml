@@ -18,17 +18,14 @@
             android:id="@+id/media_back"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingStart="8dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="10dp"
-            android:paddingBottom="10dp"
+            android:padding="10dp"
             android:src="@drawable/ic_action_back" />
 
         <com.github.mminng.media.widget.MarqueeTextView
             android:id="@+id/media_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="12dp"
+            android:layout_marginEnd="15dp"
             android:ellipsize="marquee"
             android:singleLine="true"
             android:textColor="#FFFFFF"
@@ -55,16 +52,9 @@
             android:padding="10dp"
             android:src="@drawable/ic_action_paused" />
 
-        <SeekBar
-            android:id="@+id/media_seekbar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
-
         <TextView
             android:id="@+id/media_position"
-            android:layout_width="50dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="end"
             android:text="00:00"
@@ -72,13 +62,12 @@
             android:textSize="11sp"
             android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="wrap_content"
+        <SeekBar
+            android:id="@+id/media_seekbar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text=" / "
-            android:textColor="#FFFFFF"
-            android:textSize="11sp"
-            android:textStyle="bold" />
+            android:layout_weight="1" />
 
         <TextView
             android:id="@+id/media_duration"
@@ -92,18 +81,20 @@
         <TextView
             android:id="@+id/media_speed"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:paddingStart="15dp"
+            android:paddingEnd="20dp"
             android:text="@string/player_speed"
             android:textColor="#FFFFFF"
-            android:textSize="11sp"
+            android:textSize="13sp"
             android:textStyle="bold"
             android:visibility="gone" />
 
         <ImageView
             android:id="@+id/media_fullScreen"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:padding="10dp"
             android:src="@drawable/ic_action_fullscreen" />
     </LinearLayout>

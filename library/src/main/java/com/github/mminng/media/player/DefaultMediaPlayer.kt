@@ -114,6 +114,7 @@ class DefaultMediaPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
     override fun setSpeed(speed: Float) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             player.playbackParams = player.playbackParams.setSpeed(speed)
+            stateStarted()
         }
     }
 

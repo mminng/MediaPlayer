@@ -56,7 +56,7 @@ abstract class BasePlayer : Player {
     }
 
     override fun getPlayerState(): PlayerState {
-        _listener?.onPlayerState()?.let {
+        _listener?.requirePlayerState()?.let {
             return it
         }
         return PlayerState.IDLE

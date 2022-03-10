@@ -1,6 +1,7 @@
 package com.github.mminng.media.controller
 
 import android.content.Context
+import android.os.Vibrator
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -8,9 +9,10 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.annotation.LayoutRes
 import com.github.mminng.media.R
-import com.github.mminng.media.controller.gesture.GestureController
 import com.github.mminng.media.controller.gesture.Gesture
+import com.github.mminng.media.controller.gesture.GestureController
 import com.github.mminng.media.player.PlayerState
+import com.github.mminng.media.renderer.RenderMode
 
 /**
  * Created by zh on 2021/12/9.
@@ -26,13 +28,25 @@ abstract class BaseController @JvmOverloads constructor(
     private var _coverViewEnable: Boolean = false
     private var _completionViewEnable: Boolean = false
     private var _errorViewEnable: Boolean = false
-    private var _gestureController: Gesture = GestureController(context, attrs)
+    private val gestureController: Gesture = GestureController(context, attrs)
     private var _coverBindListener: ((view: ImageView) -> Unit)? = null
     private var _isControllerReadyListener: (() -> Unit)? = null
-    var controllerListener: Controller.Listener? = null
+    private var _listener: Controller.Listener? = null
 
     private val controllerView: View by lazy {
         inflateLayout(setControllerLayout(), true)
+    }
+    private val progressView: View by lazy {
+        inflateLayout(setSwipeProgressView())
+    }
+    private val brightnessView: View by lazy {
+        inflateLayout(setSwipeBrightnessView())
+    }
+    private val volumeView: View by lazy {
+        inflateLayout(setSwipeVolumeView())
+    }
+    private val longTouchView: View by lazy {
+        inflateLayout(setTouchSpeedView())
     }
     private val stateCoverView: View by lazy {
         inflateLayout(setCoverView())
@@ -58,16 +72,24 @@ abstract class BaseController @JvmOverloads constructor(
         super.onAttachedToWindow()
         if (_controllerIsReady) return
         onLayoutCreated(controllerView)
-        addView(_gestureController.getView(), 0)
+        addView(gestureController.getView(), 0)
         addView(stateBufferView, 0)
+        addView(progressView)
+        addView(brightnessView)
+        addView(volumeView)
+        addView(longTouchView)
         addView(stateCompletionView)
         addView(stateErrorView)
         addView(stateCoverView)
+        progressView.visibility = GONE
+        brightnessView.visibility = GONE
+        volumeView.visibility = GONE
+        longTouchView.visibility = GONE
         stateBufferView.visibility = INVISIBLE
         stateCompletionView.visibility = GONE
         stateErrorView.visibility = GONE
         stateCoverView.visibility = if (_coverViewEnable) VISIBLE else GONE
-        _gestureController.setListener(this)
+        gestureController.setListener(this)
         _controllerIsReady = true
         _isControllerReadyListener?.invoke()
     }
@@ -123,6 +145,58 @@ abstract class BaseController @JvmOverloads constructor(
         }
     }
 
+    override fun changeRenderMode(renderMode: RenderMode) {
+        _listener?.onChangeRenderMode(renderMode)
+    }
+
+    override fun seekTo(position: Int) {
+        _listener?.onSeekTo(position)
+    }
+
+    override fun playerBack() {
+        _listener?.onPlayerBack()
+    }
+
+    override fun playOrPause(pauseFromUser: Boolean) {
+        _listener?.onPlayOrPause(pauseFromUser)
+    }
+
+    override fun screenChanged() {
+        _listener?.onScreenChanged()
+    }
+
+    override fun changeSpeed(speed: Float) {
+        _listener?.onChangeSpeed(speed)
+    }
+
+    override fun prepare(playWhenPrepared: Boolean) {
+        _listener?.onPrepare(playWhenPrepared)
+    }
+
+    override fun replay() {
+        _listener?.onReplay()
+    }
+
+    override fun retry() {
+        _listener?.onRetry()
+    }
+
+    override fun setSwipeProgressView(): Int {
+        return R.layout.default_swipe_progress_layout
+    }
+
+    override fun setSwipeBrightnessView(): Int {
+        return R.layout.default_swipe_brightness_layout
+    }
+
+    override fun setSwipeVolumeView(): Int {
+        return R.layout.default_swipe_volume_layout
+    }
+
+    override fun setTouchSpeedView(): Int {
+        return R.layout.default_touch_speed_layout
+    }
+
     override fun setCoverView(): Int {
         return R.layout.default_state_cover_layout
     }
@@ -156,18 +230,32 @@ abstract class BaseController @JvmOverloads constructor(
             removeCallbacks(visibilityRunnable)
             postDelayed(visibilityRunnable, _visibilityInterval)
         }
-        controllerListener?.onPlayOrPause(true)
+        _listener?.onPlayOrPause(true)
     }
 
     override fun onLongTap(isTouch: Boolean) {
         if (_controllerIsVisible) {
             hideController()
         }
-        controllerListener?.onTouchSpeed(isTouch)
+        _listener?.onTouchSpeed(isTouch)
+    }
+
+    override fun getCurrentPosition(): Int {
+        _listener?.let {
+            return it.requireCurrentPosition()
+        }
+        return 0
+    }
+
+    override fun getDuration(): Int {
+        _listener?.let {
+            return it.requireDuration()
+        }
+        return 0
     }
 
     override fun updatePosition() {
-        controllerListener?.onPositionUpdated()
+        _listener?.onPositionUpdated()
         postDelayed(progressRunnable, _updateInterval)
     }
 
@@ -176,8 +264,8 @@ abstract class BaseController @JvmOverloads constructor(
     }
 
     override fun setListener(listener: Controller.Listener) {
-        if (controllerListener === listener) return
-        controllerListener = listener
+        if (_listener === listener) return
+        _listener = listener
     }
 
     override fun setControllerReadyListener(listener: () -> Unit) {
@@ -191,7 +279,7 @@ abstract class BaseController @JvmOverloads constructor(
     override fun onCanBack(): Boolean = true
 
     override fun getPlayerState(): PlayerState {
-        controllerListener?.onPlayerState()?.let {
+        _listener?.requirePlayerState()?.let {
             return it
         }
         return PlayerState.IDLE
@@ -204,6 +292,16 @@ abstract class BaseController @JvmOverloads constructor(
         removeCallbacks(visibilityRunnable)
     }
 
+    fun getSwipeProgressView(): View = progressView
+
+    fun getSwipeBrightnessView(): View = brightnessView
+
+    fun getSwipeVolumeView(): View = volumeView
+
+    fun getTouchSpeedView(): View = longTouchView
+
+    fun getBufferView(): View = stateBufferView
+
     fun getCoverView(): View = stateCoverView
 
     fun getCompletionView(): View = stateCompletionView
@@ -214,21 +312,43 @@ abstract class BaseController @JvmOverloads constructor(
         this._coverBindListener = listener
     }
 
-    fun setGestureController(gestureController: Gesture) {
-        if (_gestureController === gestureController) return
-        _gestureController = gestureController
+    fun setGestureEnable(enable: Boolean) {
+        gestureController.setGestureEnable(enable)
     }
+
+    fun getGestureEnable(): Boolean = gestureController.getGestureEnable()
 
     fun setCoverViewEnable(enable: Boolean) {
         _coverViewEnable = enable
+        if (isControllerReady()) {
+            if (enable) {
+                stateCoverView.visibility = VISIBLE
+            } else {
+                stateCoverView.visibility = GONE
+            }
+        }
     }
 
     fun setCompletionViewEnable(enable: Boolean) {
         _completionViewEnable = enable
+        if (isControllerReady()) {
+            if (enable) {
+                stateCompletionView.visibility = VISIBLE
+            } else {
+                stateCompletionView.visibility = GONE
+            }
+        }
     }
 
     fun setErrorViewEnable(enable: Boolean) {
         _errorViewEnable = enable
+        if (isControllerReady()) {
+            if (enable) {
+                stateErrorView.visibility = VISIBLE
+            } else {
+                stateErrorView.visibility = GONE
+            }
+        }
     }
 
     fun setUpdateInterval(millis: Long) {
