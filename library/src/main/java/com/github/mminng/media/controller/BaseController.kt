@@ -1,7 +1,6 @@
 package com.github.mminng.media.controller
 
 import android.content.Context
-import android.os.Vibrator
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -233,11 +232,11 @@ abstract class BaseController @JvmOverloads constructor(
         _listener?.onPlayOrPause(true)
     }
 
-    override fun onLongTap(isTouch: Boolean) {
+    override fun onLongTap(isTouch: Boolean, restore: Boolean) {
         if (_controllerIsVisible) {
             hideController()
         }
-        _listener?.onTouchSpeed(isTouch)
+        _listener?.onTouchSpeed(isTouch, restore)
     }
 
     override fun getCurrentPosition(): Int {
@@ -309,7 +308,7 @@ abstract class BaseController @JvmOverloads constructor(
     fun getErrorView(): View = stateErrorView
 
     fun setCover(listener: (view: ImageView) -> Unit) {
-        this._coverBindListener = listener
+        _coverBindListener = listener
     }
 
     fun setGestureEnable(enable: Boolean) {
@@ -317,6 +316,10 @@ abstract class BaseController @JvmOverloads constructor(
     }
 
     fun getGestureEnable(): Boolean = gestureController.getGestureEnable()
+
+    fun setRestoreSpeed(shouldRestore: Boolean) {
+        gestureController.setRestoreSpeed(shouldRestore)
+    }
 
     fun setCoverViewEnable(enable: Boolean) {
         _coverViewEnable = enable

@@ -28,6 +28,9 @@ class GestureController @JvmOverloads constructor(
     private var _listener: Gesture.Listener? = null
     private var _gestureEnable: Boolean = true
     private var _hasLongTap: Boolean = false
+
+    //restore play speed
+    private var _shouldRestore: Boolean = true
     private var _canMove = false
     private var _motionType = MOTION_NONE
     private var _viewWidth: Int = 0
@@ -69,7 +72,8 @@ class GestureController @JvmOverloads constructor(
                             vibrate.vibrate(30)
                         }
                         _hasLongTap = true
-                        _listener?.onLongTap(true)
+                        _shouldRestore = true
+                        _listener?.onLongTap(isTouch = true)
                     }
                     super.onLongPress(e)
                 }
@@ -188,7 +192,7 @@ class GestureController @JvmOverloads constructor(
             }
             MotionEvent.ACTION_UP -> {
                 if (_hasLongTap) {
-                    _listener?.onLongTap(false)
+                    _listener?.onLongTap(isTouch = false, restoreSpeed = _shouldRestore)
                 }
                 _listener?.onSwipeProgressView(
                     false,
@@ -225,6 +229,10 @@ class GestureController @JvmOverloads constructor(
     }
 
     override fun getGestureEnable(): Boolean = _gestureEnable
+
+    override fun setRestoreSpeed(shouldRestore: Boolean) {
+        _shouldRestore = shouldRestore
+    }
 
     private fun setScreenBrightness(brightness: Float) {
         val window = (context as Activity).window

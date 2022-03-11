@@ -1,24 +1,26 @@
 package com.github.mminng.media.controller
 
-import android.animation.Animator
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
-import android.view.animation.LinearInterpolator
-import android.widget.*
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import com.github.mminng.media.R
 import com.github.mminng.media.player.PlayerState
 import com.github.mminng.media.utils.convertMillis
-import com.github.mminng.media.utils.e
 import com.github.mminng.media.widget.MarqueeTextView
 import com.github.mminng.media.widget.Menu
 import com.github.mminng.media.widget.MenuView
+import com.github.mminng.media.widget.timebar.DefaultTimeBar
+import com.github.mminng.media.widget.timebar.TimeBar
 
 /**
  * Created by zh on 2021/9/20.
@@ -26,7 +28,7 @@ import com.github.mminng.media.widget.MenuView
 @SuppressLint("UseCompatLoadingForColorStateLists")
 class DefaultController @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
-) : BaseController(context, attrs), View.OnClickListener, SeekBar.OnSeekBarChangeListener {
+) : BaseController(context, attrs), View.OnClickListener, TimeBar.OnScrubListener {
 
     private val backView: ImageView by lazy {
         findViewById(R.id.media_back)
@@ -37,7 +39,7 @@ class DefaultController @JvmOverloads constructor(
     private val playPauseView: ImageView by lazy {
         findViewById(R.id.media_play_pause)
     }
-    private val timeBar: SeekBar by lazy {
+    private val timeBar: DefaultTimeBar by lazy {
         findViewById(R.id.media_seekbar)
     }
     private val positionView: TextView by lazy {
@@ -83,11 +85,12 @@ class DefaultController @JvmOverloads constructor(
         getTouchSpeedView().findViewById(R.id.media_touch_speed_icon)
     }
 
-    private var _activeColor: Int = R.color.teal
+    private var _activeColor: Int = android.R.color.white
     private var _seekFromUser: Boolean = false
     private var _isFullScreen: Boolean = false
     private var _topEnable: Boolean = true
     private var _speedEnable: Boolean = true
+    private var _timeBarEnable: Boolean = true
     private var _titleStr: String = ""
     private var touchSpeedIconAnimator: ValueAnimator =
         ObjectAnimator.ofFloat(touchSpeedIcon, "alpha", 1.0F, 0.3F)
@@ -111,7 +114,9 @@ class DefaultController @JvmOverloads constructor(
         playPauseView.setOnClickListener(this)
         fullScreenView.setOnClickListener(this)
         speedView.setOnClickListener(this)
-        timeBar.setOnSeekBarChangeListener(this)
+        timeBar.addListener(this)
+        timeBar.isEnabled = _timeBarEnable
+        timeBar.setPlayedColor(ContextCompat.getColor(context, _activeColor))
         bufferView.indeterminateTintList = resources.getColorStateList(_activeColor)
         bindCoverView()
         bindCompletionView()
@@ -124,23 +129,21 @@ class DefaultController @JvmOverloads constructor(
         touchSpeedIconAnimator.repeatMode = ValueAnimator.REVERSE
     }
 
-    override fun onStartTrackingTouch(seekBar: SeekBar?) {
+    override fun onScrubStart(timeBar: TimeBar?, position: Long) {
         _seekFromUser = true
         showController(false)
     }
 
-    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-        if (fromUser) {
-            positionView.text = convertMillis(progress)
-        }
+    override fun onScrubMove(timeBar: TimeBar?, position: Long) {
+        positionView.text = convertMillis(position.toInt())
     }
 
-    override fun onStopTrackingTouch(seekBar: SeekBar?) {
+    override fun onScrubStop(timeBar: TimeBar?, position: Long, canceled: Boolean) {
         _seekFromUser = false
         showController()
-        seekBar?.let {
-            seekTo(it.progress)
-        }
+        positionView.text = convertMillis(position.toInt())
+        timeBar?.setPosition(position)
+        seekTo(position.toInt())
     }
 
     override fun onClick(v: View?) {
@@ -169,18 +172,18 @@ class DefaultController @JvmOverloads constructor(
 
     override fun onDuration(duration: Int) {
         durationView.text = convertMillis(duration)
-        timeBar.max = duration
+        timeBar.setDuration(duration.toLong())
     }
 
     override fun onCurrentPosition(position: Int) {
         if (!_seekFromUser) {
             positionView.text = convertMillis(position)
-            timeBar.progress = position
+            timeBar.setPosition(position.toLong())
         }
     }
 
     override fun onBufferPosition(position: Int) {
-        timeBar.secondaryProgress = position
+        timeBar.setBufferedPosition(position.toLong())
     }
 
     override fun onPlayingChanged(isPlaying: Boolean) {
@@ -214,12 +217,22 @@ class DefaultController @JvmOverloads constructor(
         if (speedMenu.isShowing()) {
             speedMenu.hide()
         }
+        if (touchSpeedView.visibility == VISIBLE) {
+            touchSpeedView.visibility = GONE
+            touchSpeedIconAnimator.cancel()
+            setRestoreSpeed(false)
+        }
     }
 
     override fun onPlayerError(errorMessage: String) {
         errorMessageView.text = errorMessage
         if (speedMenu.isShowing()) {
             speedMenu.hide()
+        }
+        if (touchSpeedView.visibility == VISIBLE) {
+            touchSpeedView.visibility = GONE
+            touchSpeedIconAnimator.cancel()
+            setRestoreSpeed(false)
         }
     }
 
@@ -255,8 +268,8 @@ class DefaultController @JvmOverloads constructor(
         }
     }
 
-    override fun onLongTap(isTouch: Boolean) {
-        super.onLongTap(isTouch)
+    override fun onLongTap(isTouch: Boolean, restore: Boolean) {
+        super.onLongTap(isTouch, restore)
         if (speedMenu.isShowing()) {
             speedMenu.hide()
         }
@@ -335,6 +348,12 @@ class DefaultController @JvmOverloads constructor(
                 super.onCanBack()
             }
         }
+    }
+
+    override fun release() {
+        super.release()
+        touchSpeedIconAnimator.cancel()
+        timeBar.removeListener(this)
     }
 
     private fun addSpeedMenu() {
@@ -433,6 +452,14 @@ class DefaultController @JvmOverloads constructor(
         if (isControllerReady()) {
             speedMenu.setSelectedColor(ContextCompat.getColor(context, activeColor))
             bufferView.indeterminateTintList = resources.getColorStateList(activeColor)
+            timeBar.setPlayedColor(ContextCompat.getColor(context, activeColor))
+        }
+    }
+
+    fun setTimeBarEnable(enable: Boolean) {
+        _timeBarEnable = enable
+        if (isControllerReady()) {
+            timeBar.isEnabled = _timeBarEnable
         }
     }
 

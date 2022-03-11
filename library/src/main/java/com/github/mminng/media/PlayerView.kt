@@ -316,14 +316,16 @@ class PlayerView @JvmOverloads constructor(
         setSpeed(speed)
     }
 
-    override fun onTouchSpeed(isTouch: Boolean) {
+    override fun onTouchSpeed(isTouch: Boolean, restoreSpeed: Boolean) {
         if (isTouch) {
             _player?.let {
                 _currentSpeed = it.getSpeed()
             }
             setSpeed(2.0F)
         } else {
-            setSpeed(_currentSpeed)
+            if (restoreSpeed) {
+                setSpeed(_currentSpeed)
+            }
         }
     }
 

@@ -70,7 +70,7 @@ class MainActivity : AppCompatActivity() {
 //        controllerView.setTopControllerVisibility(View.VISIBLE)
         controllerView.setGestureEnable(true)
         controllerView.setCoverPlayButtonResource(R.drawable.ic_action_paused)
-        controllerView.setStyleColor(R.color.purple_200)
+        controllerView.setStyleColor(R.color.teal_200)
         controllerView.setTitle("好莱坞往事")
         controllerView.setTopControllerEnable(false)
         controllerView.setCover {

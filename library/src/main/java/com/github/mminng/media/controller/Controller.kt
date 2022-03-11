@@ -105,7 +105,7 @@ interface Controller {
 
         fun onChangeSpeed(speed: Float)
 
-        fun onTouchSpeed(isTouch: Boolean)
+        fun onTouchSpeed(isTouch: Boolean, restoreSpeed: Boolean)
 
         fun onChangeRenderMode(renderMode: RenderMode)
 

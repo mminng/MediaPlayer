@@ -62,11 +62,12 @@
             android:textSize="11sp"
             android:textStyle="bold" />
 
-        <SeekBar
+        <com.github.mminng.media.widget.timebar.DefaultTimeBar
             android:id="@+id/media_seekbar"
-            style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
             android:layout_weight="1" />
 
         <TextView

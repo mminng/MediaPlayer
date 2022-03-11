@@ -11,6 +11,8 @@ interface Gesture {
 
     fun getGestureEnable(): Boolean
 
+    fun setRestoreSpeed(shouldRestore: Boolean)
+
     fun getView(): View
 
     fun setListener(listener: Listener)
@@ -21,7 +23,7 @@ interface Gesture {
 
         fun onDoubleTap()
 
-        fun onLongTap(isTouch: Boolean)
+        fun onLongTap(isTouch: Boolean, restoreSpeed: Boolean = true)
 
         fun onSwipeProgressView(
             show: Boolean,
