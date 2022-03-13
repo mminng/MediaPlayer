@@ -19,8 +19,8 @@
             android:exported="false" />
         <activity
             android:name=".OpenActivity"
-            android:screenOrientation="portrait"
-            android:exported="true">
+            android:exported="true"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -29,9 +29,10 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:theme="@style/Theme.PlayerActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.PlayerActivity" />
     </application>
 
 </manifest>

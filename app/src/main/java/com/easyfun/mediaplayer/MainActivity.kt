@@ -1,14 +1,13 @@
 package com.easyfun.mediaplayer
 
 import android.os.Bundle
-import android.util.Log
-import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.github.mminng.media.controller.DefaultController
 import com.github.mminng.media.PlayerView
+import com.github.mminng.media.controller.DefaultController
+import com.github.mminng.media.ijkplayer.DefaultIjkPlayer
 import com.github.mminng.media.player.DefaultMediaPlayer
 import com.github.mminng.media.renderer.RenderMode
 import com.squareup.picasso.Picasso
@@ -16,11 +15,9 @@ import com.squareup.picasso.Picasso
 class MainActivity : AppCompatActivity() {
 
     private val localPath: String =
-        "/storage/emulated/0/Movies/横屏.mp4"
+        "/storage/emulated/0/Movies/1080p.mp4"
     private val localPath2: String =
         "/storage/emulated/0/Movies/竖屏.mp4"
-    private val localPath3: String =
-        "/storage/emulated/0/Quark/Download/竖屏测试.mp4"
 
     private val playerView: PlayerView by lazy {
         findViewById(R.id.player_view)
@@ -55,12 +52,20 @@ class MainActivity : AppCompatActivity() {
     val controllerView: DefaultController by lazy {
         DefaultController(this)
     }
+    val url =
+        "https://images.unsplash.com/photo-1634334181759-a965220b6a91?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHx0b3BpYy1mZWVkfDExfGJEbzQ4Y1Vod25ZfHxlbnwwfHx8fA%3D%3D&auto=format&fit=crop&w=500&q=60"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        controllerView.onBindCover { url, view ->
+            Picasso.get()
+                .load(url)
+                .into(view)
+        }
+        controllerView.setCover(url)
         val player = DefaultMediaPlayer()
-//        val player = Ijk_Player()
+//        val player = DefaultIjkPlayer()
 //        val player = Exo_Player(this)
         playerView.setOrientationApplySystem(true)
         playerView.setPlayer(player)
@@ -69,23 +74,18 @@ class MainActivity : AppCompatActivity() {
 //        controllerView.setCoverViewEnable(true)
 //        controllerView.setTopControllerVisibility(View.VISIBLE)
         controllerView.setGestureEnable(true)
-        controllerView.setCoverPlayButtonResource(R.drawable.ic_action_paused)
+        controllerView.setCoverPlayResource(R.drawable.ic_action_paused)
         controllerView.setStyleColor(R.color.teal_200)
         controllerView.setTitle("好莱坞往事")
         controllerView.setTopControllerEnable(false)
-        controllerView.setCover {
-            Picasso.get()
-                .load("https://images.unsplash.com/photo-1634334181759-a965220b6a91?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHx0b3BpYy1mZWVkfDExfGJEbzQ4Y1Vod25ZfHxlbnwwfHx8fA%3D%3D&auto=format&fit=crop&w=500&q=60")
-                .into(it)
-        }
+
 //        playerView.setDataSource(localPath)
-//        playerView.setDataSource(localPath2)
-//        playerView.setDataSource(localPath3)
+        playerView.setDataSource(localPath2)
 //        playerView.setDataSource("https://v.96koo.net/common/LzQxOTAvcmVsZWFzZS8yMDIwMDczMC9ETTRCV0cyV3llL0RNNEJXRzJXeWVfODQ4XzgwMA==_19929.m3u8")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
 //        playerView.setDataSource("http://ips.ifeng.com/video19.ifeng.com/video09/2014/06/16/1989823-102-086-0009.mp4")
-        playerView.setDataSource("https://vfx.mtime.cn/Video/2022/02/24/mp4/220224085656529169.mp4")
-        playerView.prepare()
+//        playerView.setDataSource("https://vfx.mtime.cn/Video/2022/02/24/mp4/220224085656529169.mp4")
+        playerView.prepare(true)
         renderMode.setOnClickListener {
             playerView.setRenderMode(RenderMode.FIT)
         }
@@ -129,7 +129,6 @@ class MainActivity : AppCompatActivity() {
 //                } else {
 //                    controllerView.setTopControllerVisibility(View.INVISIBLE)
 //                }
-                Log.e("PlayerDebug", "screenChanged=$it")
             }
             completion {
 //                Toast.makeText(this@MainActivity, "播放完成", Toast.LENGTH_SHORT).show()
@@ -138,9 +137,6 @@ class MainActivity : AppCompatActivity() {
 //                Toast.makeText(this@MainActivity, "播放错误$it", Toast.LENGTH_SHORT).show()
             }
         }
-//        Handler().postDelayed({
-//            playerView.setFullScreen(false)
-//        }, 5 * 1000)
     }
 
     override fun onBackPressed() {

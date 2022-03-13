@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_error">Error</string>
+    <string name="player_retry">Retry</string>
+    <string name="player_completion">Completion</string>
+    <string name="player_replay">Replay</string>
+    <string name="player_speed">Speed</string>
+    <string name="player_speed_play">Speed play</string>
+</resources>

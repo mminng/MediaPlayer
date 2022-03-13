@@ -1,7 +1,6 @@
 package com.easyfun.mediaplayer
 
 import android.content.Context
-import android.util.Log
 import android.view.Surface
 import com.github.mminng.media.player.BasePlayer
 import com.github.mminng.media.player.PlayerState
@@ -74,12 +73,12 @@ class Exo_Player constructor(context: Context) : BasePlayer() {
 
     override fun start() {
         if (getPlayerState() == PlayerState.COMPLETION && !_seekOnCompletionAfter) {
-            seekTo(Long.MIN_VALUE.toInt() + 1)
+            seekTo(Long.MIN_VALUE + 1)
         }
         player.play()
     }
 
-    override fun seekTo(position: Int) {
+    override fun seekTo(position: Long) {
         if (getPlayerState() == PlayerState.COMPLETION) {
             _seekOnCompletionAfter = true
         }
@@ -106,12 +105,12 @@ class Exo_Player constructor(context: Context) : BasePlayer() {
         return player.isPlaying
     }
 
-    override fun getCurrentPosition(): Int {
-        return player.currentPosition.toInt()
+    override fun getPosition(): Long {
+        return player.currentPosition
     }
 
-    override fun getDuration(): Int {
-        return player.duration.toInt()
+    override fun getDuration(): Long {
+        return player.duration
     }
 
     override fun getVideoWidth(): Int {
@@ -122,8 +121,8 @@ class Exo_Player constructor(context: Context) : BasePlayer() {
         return player.videoSize.height
     }
 
-    override fun getBufferPosition(): Int {
-        return player.bufferedPosition.toInt()
+    override fun getBufferedPosition(): Long {
+        return player.bufferedPosition
     }
 
     override fun getSpeed(): Float {

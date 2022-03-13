@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_error">播放错误</string>
+    <string name="player_retry">重试</string>
+    <string name="player_completion">播放完成</string>
+    <string name="player_replay">重播</string>
+    <string name="player_speed">倍速</string>
+    <string name="player_speed_play">倍速播放中</string>
+    <string name="time_placeholder" translatable="false">00:00</string>
+</resources>

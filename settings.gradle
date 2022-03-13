@@ -8,4 +8,7 @@ dependencyResolutionManagement {
 }
 rootProject.name = "MediaPlayer"
 include ':app'
-include ':library'
+include ':core'
+include ':ijkplayer'
+include ':ijkplayer-armv7a'
+include ':ijkplayer-arm64'
