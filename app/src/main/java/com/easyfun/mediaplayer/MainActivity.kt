@@ -7,8 +7,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.github.mminng.media.PlayerView
 import com.github.mminng.media.controller.DefaultController
-import com.github.mminng.media.player.DefaultIjkPlayer
-import com.github.mminng.media.player.DefaultMediaPlayer
+import com.github.mminng.media.exoplayer.DefaultExoPlayer
 import com.github.mminng.media.renderer.RenderMode
 import com.squareup.picasso.Picasso
 
@@ -64,9 +63,9 @@ class MainActivity : AppCompatActivity() {
                 .into(view)
         }
         controllerView.setCover(url)
-        val player = DefaultMediaPlayer()
+//        val player = DefaultMediaPlayer()
 //        val player = DefaultIjkPlayer()
-//        val player = Exo_Player(this)
+        val player = DefaultExoPlayer(this)
         playerView.setOrientationApplySystem(true)
         playerView.setPlayer(player)
         playerView.setController(controllerView)
@@ -79,10 +78,10 @@ class MainActivity : AppCompatActivity() {
         controllerView.setTitle("好莱坞往事")
         controllerView.setTopControllerEnable(false)
 
-//        playerView.setDataSource(localPath)
+        playerView.setDataSource(localPath)
 //        playerView.setDataSource(localPath2)
 //        playerView.setDataSource("https://v.96koo.net/common/LzQxOTAvcmVsZWFzZS8yMDIwMDczMC9ETTRCV0cyV3llL0RNNEJXRzJXeWVfODQ4XzgwMA==_19929.m3u8")
-        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
+//        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
 //        playerView.setDataSource("http://ips.ifeng.com/video19.ifeng.com/video09/2014/06/16/1989823-102-086-0009.mp4")
 //        playerView.setDataSource("http://vfx.mtime.cn/Video/2022/02/24/mp4/220224085656529169.mp4")
         playerView.prepare(true)
