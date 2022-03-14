@@ -1,8 +1,6 @@
-package com.github.mminng.media.ijkplayer
+package com.github.mminng.media.player
 
 import android.view.Surface
-import com.github.mminng.media.player.BasePlayer
-import com.github.mminng.media.player.PlayerState
 import tv.danmaku.ijk.media.player.IMediaPlayer
 import tv.danmaku.ijk.media.player.IjkMediaPlayer
 

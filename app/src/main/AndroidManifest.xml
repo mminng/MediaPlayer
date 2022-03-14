@@ -31,7 +31,6 @@
             android:name=".MainActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:exported="false"
-            android:screenOrientation="portrait"
             android:theme="@style/Theme.PlayerActivity" />
     </application>
 

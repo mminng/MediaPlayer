@@ -3,6 +3,7 @@ package com.github.mminng.media
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.media.AudioManager
 import android.provider.Settings
 import android.util.AttributeSet
@@ -155,6 +156,15 @@ class PlayerView @JvmOverloads constructor(
                     }
                 }
             }
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration?) {
+        super.onConfigurationChanged(newConfig)
+        if (newConfig?.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            e("newConfig=横屏")
+        } else {
+            e("newConfig=竖屏")
         }
     }
 

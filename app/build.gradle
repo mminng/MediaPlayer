@@ -39,9 +39,8 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation project(path: ':core')
     implementation project(path: ':ijkplayer')
-    implementation 'tv.danmaku.ijk.media:ijkplayer-arm64:0.8.8'
-//    implementation project(path: ':ijkplayer-armv7a')
-//    implementation project(path: ':ijkplayer-arm64')
+    implementation project(path: ':ijkplayer-arm64')
+    implementation project(path: ':ijkplayer-armv7a')
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
