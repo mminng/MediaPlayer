@@ -33,6 +33,8 @@ interface Controller {
 
     fun requireCover(): ImageView
 
+    fun hideCover()
+
     fun playerBack()
 
     fun prepare(playWhenPrepared: Boolean = false)
@@ -105,7 +107,7 @@ interface Controller {
 
         fun onChangeSpeed(speed: Float)
 
-        fun onTouchSpeed(isTouch: Boolean)
+        fun onTouchSpeed(touching: Boolean)
 
         fun onScreenChanged()
 

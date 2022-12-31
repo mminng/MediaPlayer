@@ -6,6 +6,7 @@ package com.github.mminng.media.player
 sealed class PlayerOrientation {
     internal object NONE : PlayerOrientation()
     internal object UNSPECIFIED : PlayerOrientation()
-    object LANDSCAPE : PlayerOrientation()
     object PORTRAIT : PlayerOrientation()
+    object LANDSCAPE : PlayerOrientation()
+    internal object REVERSE : PlayerOrientation()
 }

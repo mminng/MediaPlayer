@@ -88,6 +88,8 @@
             android:id="@+id/player_view"
             android:layout_width="300dp"
             android:layout_height="180dp"
-            android:layout_gravity="center" />
+            android:layout_gravity="center"
+            app:renderType="texture_view"
+            android:background="@color/purple_500" />
     </FrameLayout>
 </LinearLayout>

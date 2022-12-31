@@ -14,13 +14,13 @@ import kotlin.math.roundToInt
 /**
  * Created by zh on 2022/1/31.
  */
-class GestureController @JvmOverloads constructor(
+class DefaultGesture @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr), Gesture, View.OnTouchListener {
 
     companion object {
         private const val MOTION_NONE: Int = -1
-        private const val MOTION_PROGRESS: Int = 0
+        private const val MOTION_SEEK: Int = 0
         private const val MOTION_VOLUME: Int = 1
         private const val MOTION_BRIGHTNESS: Int = 2
     }
@@ -32,6 +32,7 @@ class GestureController @JvmOverloads constructor(
     private val gestureDetector: GestureDetector
     private var _listener: Gesture.Listener? = null
     private var _gestureEnable: Boolean = true
+    private var _gestureSeekEnable: Boolean = true
     private var _hasLongTap: Boolean = false
     private var _canMove = false
     private var _motionType = MOTION_NONE
@@ -65,7 +66,10 @@ class GestureController @JvmOverloads constructor(
 
                 @Suppress("DEPRECATION")
                 override fun onLongPress(e: MotionEvent?) {
-                    if (_gestureEnable && _listener?.getPlayerState() == PlayerState.STARTED) {
+                    if (_gestureSeekEnable &&
+                        _gestureEnable &&
+                        _listener?.getPlayerState() == PlayerState.STARTED
+                    ) {
                         val vibrator: Vibrator =
                             context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
                         if (vibrator.hasVibrator()) {
@@ -73,15 +77,11 @@ class GestureController @JvmOverloads constructor(
                             vibrator.vibrate(30)
                         }
                         _hasLongTap = true
-                        _listener?.onLongTap(_hasLongTap)
+                        _listener?.onLongTap(true)
                     }
                     super.onLongPress(e)
                 }
             })
-    }
-
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
         setOnTouchListener(this)
     }
 
@@ -116,7 +116,7 @@ class GestureController @JvmOverloads constructor(
                 }
                 if (_motionType == MOTION_NONE) {
                     _motionType = if (_moveX.absoluteValue > _moveY.absoluteValue) {
-                        MOTION_PROGRESS
+                        MOTION_SEEK
                     } else {
                         if (_startX < _viewWidth / 2) {
                             MOTION_BRIGHTNESS
@@ -126,8 +126,8 @@ class GestureController @JvmOverloads constructor(
                     }
                 }
                 when (_motionType) {
-                    MOTION_PROGRESS -> {
-                        if (_moveX.absoluteValue < 15) {
+                    MOTION_SEEK -> {
+                        if (!_gestureSeekEnable || _moveX.absoluteValue < 15) {
                             return gestureDetector.onTouchEvent(event)
                         }
                         _startX = event.x
@@ -147,7 +147,7 @@ class GestureController @JvmOverloads constructor(
                             _currentPosition = _duration
                         }
                         _listener?.onSwipeSeekView(
-                            isShow = true,
+                            showing = true,
                             position = _seekOffset + _currentPosition,
                             duration = _duration
                         )
@@ -172,7 +172,7 @@ class GestureController @JvmOverloads constructor(
                         }
                         setBrightness(_currentBrightness)
                         _listener?.onSwipeBrightnessView(
-                            isShow = true,
+                            showing = true,
                             position = (_currentBrightness * 100).roundToInt()
                         )
                     }
@@ -196,7 +196,7 @@ class GestureController @JvmOverloads constructor(
                         }
                         setVolume(_currentVolume)
                         _listener?.onSwipeVolumeView(
-                            isShow = true,
+                            showing = true,
                             position = _currentVolume,
                             max = maxVolume
                         )
@@ -206,12 +206,12 @@ class GestureController @JvmOverloads constructor(
             MotionEvent.ACTION_UP -> {
                 if (_hasLongTap) {
                     _hasLongTap = false
-                    _listener?.onLongTap(_hasLongTap)
+                    _listener?.onLongTap(false)
                 }
                 when (_motionType) {
-                    MOTION_PROGRESS -> {
+                    MOTION_SEEK -> {
                         _listener?.onSwipeSeekView(
-                            isShow = false,
+                            showing = false,
                             position = _seekOffset + _currentPosition,
                             duration = _duration,
                             allowSeek = true
@@ -219,13 +219,13 @@ class GestureController @JvmOverloads constructor(
                     }
                     MOTION_BRIGHTNESS -> {
                         _listener?.onSwipeBrightnessView(
-                            isShow = false,
+                            showing = false,
                             position = (_currentBrightness * 100).roundToInt()
                         )
                     }
                     MOTION_VOLUME -> {
                         _listener?.onSwipeVolumeView(
-                            isShow = false,
+                            showing = false,
                             position = _currentVolume,
                             max = maxVolume
                         )
@@ -237,11 +237,17 @@ class GestureController @JvmOverloads constructor(
         return gestureDetector.onTouchEvent(event)
     }
 
-    override fun getGestureEnable(): Boolean = _gestureEnable
-
     override fun setGestureEnable(enable: Boolean) {
         _gestureEnable = enable
     }
+
+    override fun setGestureSeekEnable(enable: Boolean) {
+        _gestureSeekEnable = enable
+    }
+
+    override fun getGestureEnable(): Boolean = _gestureEnable
+
+    override fun getGestureSeekEnable(): Boolean = _gestureSeekEnable
 
     override fun getView(): View = this
 

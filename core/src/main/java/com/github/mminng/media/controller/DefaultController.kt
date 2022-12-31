@@ -30,65 +30,65 @@ class DefaultController @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : BaseController(context, attrs), View.OnClickListener, TimeBar.OnScrubListener {
 
-    private val backView: ImageView by lazy {
+    private val backView: ImageView by lazy(LazyThreadSafetyMode.NONE) {
         findViewById(R.id.media_back)
     }
-    private val titleView: MarqueeTextView by lazy {
+    private val titleView: MarqueeTextView by lazy(LazyThreadSafetyMode.NONE) {
         findViewById(R.id.media_title)
     }
-    private val playPauseView: ImageView by lazy {
+    private val playPauseView: ImageView by lazy(LazyThreadSafetyMode.NONE) {
         findViewById(R.id.media_play_pause)
     }
-    private val timeBar: DefaultTimeBar by lazy {
+    private val timeBar: DefaultTimeBar by lazy(LazyThreadSafetyMode.NONE) {
         findViewById(R.id.media_time_bar)
     }
-    private val positionView: TextView by lazy {
+    private val positionView: TextView by lazy(LazyThreadSafetyMode.NONE) {
         findViewById(R.id.media_position)
     }
-    private val durationView: TextView by lazy {
+    private val durationView: TextView by lazy(LazyThreadSafetyMode.NONE) {
         findViewById(R.id.media_duration)
     }
-    private val speedView: TextView by lazy {
+    private val speedView: TextView by lazy(LazyThreadSafetyMode.NONE) {
         findViewById(R.id.media_speed)
     }
-    private val fullScreenView: ImageView by lazy {
+    private val fullScreenView: ImageView by lazy(LazyThreadSafetyMode.NONE) {
         findViewById(R.id.media_fullScreen)
     }
-    private val topView: LinearLayout by lazy {
+    private val topView: LinearLayout by lazy(LazyThreadSafetyMode.NONE) {
         findViewById(R.id.media_controller_top)
     }
-    private val bottomView: LinearLayout by lazy {
+    private val bottomView: LinearLayout by lazy(LazyThreadSafetyMode.NONE) {
         findViewById(R.id.media_controller_bottom)
     }
-    private val coverImage: ImageView by lazy {
+    private val coverImage: ImageView by lazy(LazyThreadSafetyMode.NONE) {
         getCoverView().findViewById(R.id.default_cover_image)
     }
-    private val errorTextView: TextView by lazy {
+    private val errorTextView: TextView by lazy(LazyThreadSafetyMode.NONE) {
         getErrorView().findViewById(R.id.default_error_text)
     }
-    private val bufferingView: ProgressBar by lazy {
+    private val bufferingView: ProgressBar by lazy(LazyThreadSafetyMode.NONE) {
         getBufferingView().findViewById(R.id.media_buffering)
     }
-    private val seekText: TextView by lazy {
+    private val seekText: TextView by lazy(LazyThreadSafetyMode.NONE) {
         getSwipeSeekView().findViewById(R.id.swipe_seek_text)
     }
-    private val brightnessBar: ProgressBar by lazy {
+    private val brightnessBar: ProgressBar by lazy(LazyThreadSafetyMode.NONE) {
         getSwipeBrightnessView().findViewById(R.id.swipe_brightness_bar)
     }
-    private val volumeIcon: ImageView by lazy {
+    private val volumeIcon: ImageView by lazy(LazyThreadSafetyMode.NONE) {
         getSwipeVolumeView().findViewById(R.id.swipe_volume_icon)
     }
-    private val volumeBar: ProgressBar by lazy {
+    private val volumeBar: ProgressBar by lazy(LazyThreadSafetyMode.NONE) {
         getSwipeVolumeView().findViewById(R.id.swipe_volume_bar)
     }
-    private val touchSpeedView: LinearLayout by lazy {
+    private val touchSpeedView: LinearLayout by lazy(LazyThreadSafetyMode.NONE) {
         getTouchSpeedView().findViewById(R.id.media_touch_speed)
     }
-    private val touchSpeedIcon: ImageView by lazy {
+    private val touchSpeedIcon: ImageView by lazy(LazyThreadSafetyMode.NONE) {
         getTouchSpeedView().findViewById(R.id.media_touch_speed_icon)
     }
 
-    private var _activeColor: Int = android.R.color.white
+    private var _activeColor: Int = android.R.color.holo_blue_light
     private val builder: StringBuilder = StringBuilder()
     private val formatter = Formatter(builder, Locale.getDefault())
     private var _seekFromUser: Boolean = false
@@ -301,12 +301,12 @@ class DefaultController @JvmOverloads constructor(
         }
     }
 
-    override fun onLongTap(isTouch: Boolean) {
-        super.onLongTap(isTouch)
+    override fun onLongTap(touching: Boolean) {
+        super.onLongTap(touching)
         if (speedMenu.isShowing()) {
             speedMenu.hide()
         }
-        if (isTouch) {
+        if (touching) {
             touchSpeedView.visibility = VISIBLE
             speedIconAnimator.start()
         } else {
@@ -316,7 +316,7 @@ class DefaultController @JvmOverloads constructor(
     }
 
     override fun onSwipeSeekView(
-        isShow: Boolean,
+        showing: Boolean,
         position: Long,
         duration: Long,
         allowSeek: Boolean
@@ -324,7 +324,7 @@ class DefaultController @JvmOverloads constructor(
         if (speedMenu.isShowing()) {
             speedMenu.hide()
         }
-        if (isShow) {
+        if (showing) {
             if (getSwipeSeekView().visibility != VISIBLE) {
                 getSwipeSeekView().visibility = VISIBLE
             }
@@ -355,11 +355,11 @@ class DefaultController @JvmOverloads constructor(
         }
     }
 
-    override fun onSwipeBrightnessView(isShow: Boolean, position: Int, max: Int) {
+    override fun onSwipeBrightnessView(showing: Boolean, position: Int, max: Int) {
         if (speedMenu.isShowing()) {
             speedMenu.hide()
         }
-        if (isShow) {
+        if (showing) {
             if (getSwipeBrightnessView().visibility != VISIBLE) {
                 getSwipeBrightnessView().visibility = VISIBLE
                 brightnessBar.max = max
@@ -372,11 +372,11 @@ class DefaultController @JvmOverloads constructor(
         }
     }
 
-    override fun onSwipeVolumeView(isShow: Boolean, position: Int, max: Int) {
+    override fun onSwipeVolumeView(showing: Boolean, position: Int, max: Int) {
         if (speedMenu.isShowing()) {
             speedMenu.hide()
         }
-        if (isShow) {
+        if (showing) {
             if (getSwipeVolumeView().visibility != VISIBLE) {
                 getSwipeVolumeView().visibility = VISIBLE
                 volumeBar.max = max
@@ -415,9 +415,14 @@ class DefaultController @JvmOverloads constructor(
     private fun bindCoverView() {
         val play: ImageView = getCoverView().findViewById(R.id.default_cover_play_image)
         play.setOnClickListener {
-            if (getPlayerState() != PlayerState.INITIALIZED) return@setOnClickListener
             getCoverView().visibility = GONE
-            prepare(true)
+            if (getPlayerState() == PlayerState.INITIALIZED) {
+                prepare(true)
+                return@setOnClickListener
+            }
+            if (getPlayerState() == PlayerState.COMPLETION) {
+                replay()
+            }
         }
     }
 

@@ -1,5 +1,6 @@
 package com.github.mminng.media.renderer
 
+import android.util.Pair
 import android.view.Surface
 import android.view.View
 import kotlin.math.abs
@@ -22,11 +23,11 @@ interface Renderer {
 
     interface Listener {
 
-        fun onRenderCreated(surface: Surface)
+        fun onRendererCreated(surface: Surface)
 
-        fun onRenderChanged(width: Int, height: Int)
+        fun onRendererChanged(width: Int, height: Int)
 
-        fun onRenderDestroyed()
+        fun onRendererDestroyed()
     }
 
     fun resize(
@@ -35,15 +36,14 @@ interface Renderer {
         measuredWidth: Float,
         measuredHeight: Float,
         renderMode: RenderMode
-    ): IntArray {
-        if (videoWidth == 0.0F || videoHeight == 0.0F) return intArrayOf()
+    ): Pair<Int, Int> {
+        if (videoWidth == 0.0F || videoHeight == 0.0F) return Pair.create(0, 0)
         var width: Float = measuredWidth
         var height: Float = measuredHeight
         val viewAspectRatio: Float = width / height
         val videoAspectRatio: Float = videoWidth / videoHeight
         val difference: Float = videoAspectRatio / viewAspectRatio - 1
-        if (abs(difference) <= 0.01F) return intArrayOf()
-        val shouldWider: Boolean = videoAspectRatio > viewAspectRatio
+        if (abs(difference) <= 0.01F) return Pair.create(0, 0)
         when (renderMode) {
             RenderMode.FIT -> {
                 if (difference > 0) {
@@ -63,7 +63,7 @@ interface Renderer {
                 }
             }
             RenderMode.DEFAULT -> {
-                if (shouldWider) {
+                if (videoAspectRatio > viewAspectRatio) {
                     width = min(videoWidth, width)
                     height = width / videoAspectRatio
                 } else {
@@ -72,6 +72,6 @@ interface Renderer {
                 }
             }
         }
-        return intArrayOf(width.toInt(), height.toInt())
+        return Pair.create(width.toInt(), height.toInt())
     }
 }

@@ -7,62 +7,62 @@ abstract class BasePlayer : Player {
 
     private var _listener: Player.Listener? = null
 
-    override fun videoSizeChanged(width: Int, height: Int) {
+    final override fun videoSizeChanged(width: Int, height: Int) {
         _listener?.onVideoSizeChanged(width, height)
     }
 
-    override fun stateIdle() {
+    final override fun stateIdle() {
         _listener?.onPlayerStateChanged(PlayerState.IDLE)
     }
 
-    override fun stateInitialized() {
+    final override fun stateInitialized() {
         _listener?.onPlayerStateChanged(PlayerState.INITIALIZED)
     }
 
-    override fun statePreparing() {
+    final override fun statePreparing() {
         _listener?.onPlayerStateChanged(PlayerState.PREPARING)
     }
 
-    override fun statePrepared() {
+    final override fun statePrepared() {
         _listener?.onPlayerStateChanged(PlayerState.PREPARED)
     }
 
-    override fun stateBufferingStart() {
+    final override fun stateBufferingStart() {
         _listener?.onPlayerStateChanged(PlayerState.BUFFERING)
     }
 
-    override fun stateBufferingEnd() {
+    final override fun stateBufferingEnd() {
         _listener?.onPlayerStateChanged(PlayerState.BUFFERED)
     }
 
-    override fun stateRenderingStart() {
+    final override fun stateRenderingStart() {
         _listener?.onPlayerStateChanged(PlayerState.RENDERING)
     }
 
-    override fun stateStarted() {
+    final override fun stateStarted() {
         _listener?.onPlayerStateChanged(PlayerState.STARTED)
     }
 
-    override fun statePaused() {
+    final override fun statePaused() {
         _listener?.onPlayerStateChanged(PlayerState.PAUSED)
     }
 
-    override fun stateCompletion() {
+    final override fun stateCompletion() {
         _listener?.onPlayerStateChanged(PlayerState.COMPLETION)
     }
 
-    override fun stateError(error: String) {
+    final override fun stateError(error: String) {
         _listener?.onPlayerStateChanged(PlayerState.ERROR, error)
     }
 
-    override fun getPlayerState(): PlayerState {
+    final override fun getPlayerState(): PlayerState {
         _listener?.let {
             return it.requirePlayerState()
         }
         return PlayerState.IDLE
     }
 
-    override fun setListener(listener: Player.Listener) {
+    final override fun setListener(listener: Player.Listener) {
         if (_listener === listener) return
         _listener = listener
     }

@@ -8,7 +8,7 @@ import android.view.Surface
 /**
  * Created by zh on 2021/10/2.
  */
-class DefaultMediaPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
+class DefaultPlayer : BasePlayer(), MediaPlayer.OnPreparedListener,
     MediaPlayer.OnVideoSizeChangedListener, MediaPlayer.OnBufferingUpdateListener,
     MediaPlayer.OnInfoListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener {
 

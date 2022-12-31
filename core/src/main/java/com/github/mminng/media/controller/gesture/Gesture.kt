@@ -8,9 +8,13 @@ import com.github.mminng.media.player.PlayerState
  */
 interface Gesture {
 
+    fun setGestureEnable(enable: Boolean)
+
+    fun setGestureSeekEnable(enable: Boolean)
+
     fun getGestureEnable(): Boolean
 
-    fun setGestureEnable(enable: Boolean)
+    fun getGestureSeekEnable(): Boolean
 
     fun getView(): View
 
@@ -22,23 +26,23 @@ interface Gesture {
 
         fun onDoubleTap()
 
-        fun onLongTap(isTouch: Boolean)
+        fun onLongTap(touching: Boolean)
 
         fun onSwipeSeekView(
-            isShow: Boolean,
+            showing: Boolean,
             position: Long,
             duration: Long,
             allowSeek: Boolean = false
         )
 
         fun onSwipeBrightnessView(
-            isShow: Boolean,
+            showing: Boolean,
             position: Int,
             max: Int = 100
         )
 
         fun onSwipeVolumeView(
-            isShow: Boolean,
+            showing: Boolean,
             position: Int,
             max: Int
         )

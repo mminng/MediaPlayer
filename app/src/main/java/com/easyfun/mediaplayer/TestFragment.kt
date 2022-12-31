@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.github.mminng.media.controller.DefaultController
-import com.github.mminng.media.player.DefaultMediaPlayer
+import com.github.mminng.media.player.DefaultPlayer
 import com.github.mminng.media.PlayerView
 import com.github.mminng.media.renderer.RenderMode
 
@@ -33,7 +33,7 @@ class TestFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val controllerView = DefaultController(requireContext())
-        val player = DefaultMediaPlayer()
+        val player = DefaultPlayer()
         playerView.setPlayer(player)
         playerView.setRenderMode(RenderMode.DEFAULT)
         playerView.setController(controllerView)

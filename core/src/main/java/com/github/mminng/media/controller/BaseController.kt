@@ -8,8 +8,8 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.annotation.LayoutRes
 import com.github.mminng.media.R
+import com.github.mminng.media.controller.gesture.DefaultGesture
 import com.github.mminng.media.controller.gesture.Gesture
-import com.github.mminng.media.controller.gesture.GestureController
 import com.github.mminng.media.player.PlayerState
 import com.github.mminng.media.renderer.RenderMode
 
@@ -25,38 +25,39 @@ abstract class BaseController @JvmOverloads constructor(
     private var _controllerIsReady: Boolean = false
     private var _controllerIsVisible: Boolean = false
     private var _coverViewEnable: Boolean = false
+    private var _shouldHideCover: Boolean = false
     private var _completionViewEnable: Boolean = false
     private var _errorViewEnable: Boolean = false
-    private val gestureController: Gesture = GestureController(context, attrs)
     private var _bindCoverListener: ((url: String, view: ImageView) -> Unit)? = null
     private var _isControllerReadyListener: (() -> Unit)? = null
     private var _listener: Controller.Listener? = null
+    private val gestureController: Gesture = DefaultGesture(context, attrs)
 
-    private val controllerView: View by lazy {
+    private val controllerView: View by lazy(LazyThreadSafetyMode.NONE) {
         inflateLayout(setControllerLayout(), true)
     }
-    private val seekView: View by lazy {
+    private val seekView: View by lazy(LazyThreadSafetyMode.NONE) {
         inflateLayout(setSwipeSeekLayout())
     }
-    private val brightnessView: View by lazy {
+    private val brightnessView: View by lazy(LazyThreadSafetyMode.NONE) {
         inflateLayout(setSwipeBrightnessLayout())
     }
-    private val volumeView: View by lazy {
+    private val volumeView: View by lazy(LazyThreadSafetyMode.NONE) {
         inflateLayout(setSwipeVolumeLayout())
     }
-    private val longTouchView: View by lazy {
+    private val longTouchView: View by lazy(LazyThreadSafetyMode.NONE) {
         inflateLayout(setTouchSpeedLayout())
     }
-    private val stateCoverView: View by lazy {
+    private val stateCoverView: View by lazy(LazyThreadSafetyMode.NONE) {
         inflateLayout(setCoverLayout())
     }
-    private val stateBufferingView: View by lazy {
+    private val stateBufferingView: View by lazy(LazyThreadSafetyMode.NONE) {
         inflateLayout(setBufferingLayout())
     }
-    private val stateCompletionView: View by lazy {
+    private val stateCompletionView: View by lazy(LazyThreadSafetyMode.NONE) {
         inflateLayout(setCompletionLayout())
     }
-    private val stateErrorView: View by lazy {
+    private val stateErrorView: View by lazy(LazyThreadSafetyMode.NONE) {
         inflateLayout(setErrorLayout())
     }
 
@@ -87,7 +88,7 @@ abstract class BaseController @JvmOverloads constructor(
         stateBufferingView.visibility = INVISIBLE
         stateCompletionView.visibility = GONE
         stateErrorView.visibility = GONE
-        stateCoverView.visibility = if (_coverViewEnable) VISIBLE else GONE
+        stateCoverView.visibility = if (_coverViewEnable && !_shouldHideCover) VISIBLE else GONE
         gestureController.setListener(this)
         _controllerIsReady = true
         _isControllerReadyListener?.invoke()
@@ -144,67 +145,76 @@ abstract class BaseController @JvmOverloads constructor(
         }
     }
 
-    override fun playerBack() {
+    final override fun hideCover() {
+        _bindCoverListener?.let {
+            _shouldHideCover = true
+            if (isReady() && getCoverView().visibility != GONE) {
+                getCoverView().visibility = GONE
+            }
+        }
+    }
+
+    final override fun playerBack() {
         _listener?.onPlayerBack()
     }
 
-    override fun prepare(playWhenPrepared: Boolean) {
+    final override fun prepare(playWhenPrepared: Boolean) {
         _listener?.onPrepare(playWhenPrepared)
     }
 
-    override fun playOrPause(pauseFromUser: Boolean) {
+    final override fun playOrPause(pauseFromUser: Boolean) {
         _listener?.onPlayOrPause(pauseFromUser)
     }
 
-    override fun seekTo(position: Long) {
+    final override fun seekTo(position: Long) {
         _listener?.onSeekTo(position)
     }
 
-    override fun changeSpeed(speed: Float) {
+    final override fun changeSpeed(speed: Float) {
         _listener?.onChangeSpeed(speed)
     }
 
-    override fun screenChanged() {
+    final override fun screenChanged() {
         _listener?.onScreenChanged()
     }
 
-    override fun changeRenderMode(renderMode: RenderMode) {
+    final override fun changeRenderMode(renderMode: RenderMode) {
         _listener?.onChangeRenderMode(renderMode)
     }
 
-    override fun replay() {
+    final override fun replay() {
         _listener?.onReplay()
     }
 
-    override fun retry() {
+    final override fun retry() {
         _listener?.onRetry()
     }
 
-    override fun setReadyListener(listener: () -> Unit) {
+    final override fun setReadyListener(listener: () -> Unit) {
         if (_isControllerReadyListener == null && !isReady()) {
             _isControllerReadyListener = listener
         }
     }
 
-    override fun isReady(): Boolean = _controllerIsReady
+    final override fun isReady(): Boolean = _controllerIsReady
 
     override fun canBack(): Boolean = true
 
-    override fun getPlayerState(): PlayerState {
+    final override fun getPlayerState(): PlayerState {
         _listener?.let {
             return it.requirePlayerState()
         }
         return PlayerState.IDLE
     }
 
-    override fun getView(): View = this
+    final override fun getView(): View = this
 
-    override fun updatePosition() {
+    final override fun updatePosition() {
         _listener?.onPosition()
         postDelayed(progressRunnable, _updateInterval)
     }
 
-    override fun stopUpdatePosition() {
+    final override fun stopUpdatePosition() {
         removeCallbacks(progressRunnable)
     }
 
@@ -213,7 +223,7 @@ abstract class BaseController @JvmOverloads constructor(
         removeCallbacks(visibilityRunnable)
     }
 
-    override fun setListener(listener: Controller.Listener) {
+    final override fun setListener(listener: Controller.Listener) {
         if (_listener === listener) return
         _listener = listener
     }
@@ -235,21 +245,21 @@ abstract class BaseController @JvmOverloads constructor(
         _listener?.onPlayOrPause(true)
     }
 
-    override fun onLongTap(isTouch: Boolean) {
-        if (_controllerIsVisible && isTouch) {
+    override fun onLongTap(touching: Boolean) {
+        if (_controllerIsVisible && touching) {
             hideController()
         }
-        _listener?.onTouchSpeed(isTouch)
+        _listener?.onTouchSpeed(touching)
     }
 
-    override fun getPosition(): Long {
+    final override fun getPosition(): Long {
         _listener?.let {
             return it.requirePosition()
         }
         return 0
     }
 
-    override fun getDuration(): Long {
+    final override fun getDuration(): Long {
         _listener?.let {
             return it.requireDuration()
         }
@@ -309,13 +319,29 @@ abstract class BaseController @JvmOverloads constructor(
 
     fun getTouchSpeedView(): View = longTouchView
 
-    fun onBindCover(listener: (url: String, view: ImageView) -> Unit) {
+    fun onBindCover(url: String, listener: (url: String, view: ImageView) -> Unit) {
         if (_bindCoverListener === listener) return
         _bindCoverListener = listener
+        _coverViewEnable = true
+        if (isReady() && getCoverView().visibility != VISIBLE) {
+            stateCoverView.visibility = VISIBLE
+        }
+        setCover(url)
     }
 
-    fun setCover(url: String) {
+    private fun setCover(url: String) {
         _bindCoverListener?.invoke(url, requireCover())
+    }
+
+    fun showCover() {
+        if (getPlayerState() != PlayerState.COMPLETION) return
+        if (isReady() && getCoverView().visibility != VISIBLE) {
+            getCoverView().visibility = VISIBLE
+        }
+    }
+
+    fun setGestureSeekEnable(enable: Boolean) {
+        gestureController.setGestureSeekEnable(enable)
     }
 
     fun setGestureEnable(enable: Boolean) {

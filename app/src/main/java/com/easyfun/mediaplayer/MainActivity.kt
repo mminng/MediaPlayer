@@ -7,7 +7,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.github.mminng.media.PlayerView
 import com.github.mminng.media.controller.DefaultController
-import com.github.mminng.media.exoplayer.DefaultExoPlayer
+import com.github.mminng.media.player.DefaultPlayer
+import com.github.mminng.media.player.PlayerOrientation
 import com.github.mminng.media.renderer.RenderMode
 import com.squareup.picasso.Picasso
 
@@ -16,7 +17,9 @@ class MainActivity : AppCompatActivity() {
     private val localPath: String =
         "/storage/emulated/0/Movies/1080p.mp4"
     private val localPath2: String =
-        "/storage/emulated/0/Movies/竖屏.mp4"
+        "/storage/emulated/0/Download/123.mp4"
+    private val localPath3: String =
+        "/storage/emulated/0/Download/321.mp4"
 
     private val playerView: PlayerView by lazy {
         findViewById(R.id.player_view)
@@ -57,33 +60,32 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        controllerView.onBindCover { url, view ->
+        controllerView.onBindCover(url) { url, view ->
             Picasso.get()
                 .load(url)
                 .into(view)
         }
-        controllerView.setCover(url)
-//        val player = DefaultMediaPlayer()
+        val player = DefaultPlayer()
 //        val player = DefaultIjkPlayer()
-        val player = DefaultExoPlayer(this)
+//        val player = DefaultExoPlayer(this)
         playerView.setOrientationApplySystem(true)
         playerView.setPlayer(player)
         playerView.setController(controllerView)
 //        playerView.setBackNeedFinish(true)
-//        controllerView.setCoverViewEnable(true)
+        controllerView.setCompletionViewEnable(true)
 //        controllerView.setTopControllerVisibility(View.VISIBLE)
-        controllerView.setGestureEnable(true)
+//        controllerView.setGestureEnable(true)
+//        controllerView.setGestureSeekEnable(false)
         controllerView.setCoverPlayResource(R.drawable.ic_action_paused)
         controllerView.setStyleColor(R.color.teal_200)
         controllerView.setTitle("好莱坞往事")
         controllerView.setTopControllerEnable(false)
-
-        playerView.setDataSource(localPath)
+        playerView.setFullscreen(false, PlayerOrientation.LANDSCAPE)
+//        playerView.setDataSource(localPath)
 //        playerView.setDataSource(localPath2)
-//        playerView.setDataSource("https://v.96koo.net/common/LzQxOTAvcmVsZWFzZS8yMDIwMDczMC9ETTRCV0cyV3llL0RNNEJXRzJXeWVfODQ4XzgwMA==_19929.m3u8")
+        playerView.setDataSource(localPath3)
+//        playerView.setDataSource("https://vfx.mtime.cn/Video/2022/02/24/mp4/220224085656529169.mp4")
 //        playerView.setDataSource("https://vfx.mtime.cn/Video/2019/03/21/mp4/190321153853126488.mp4")
-//        playerView.setDataSource("http://ips.ifeng.com/video19.ifeng.com/video09/2014/06/16/1989823-102-086-0009.mp4")
-//        playerView.setDataSource("http://vfx.mtime.cn/Video/2022/02/24/mp4/220224085656529169.mp4")
         playerView.prepare(true)
         renderMode.setOnClickListener {
             playerView.setRenderMode(RenderMode.FIT)
@@ -110,10 +112,8 @@ class MainActivity : AppCompatActivity() {
         setSpeed.setOnClickListener {
             playerView.setSpeed(2.0F)
         }
-//        playerView.setOrientationApplySystem(false)
         playerView.setOnPlayerListener {
             prepared {
-
             }
             started {
 //                Toast.makeText(this@MainActivity, "播放", Toast.LENGTH_SHORT).show()
@@ -130,6 +130,7 @@ class MainActivity : AppCompatActivity() {
 //                }
             }
             completion {
+//                controllerView.showCover()
 //                Toast.makeText(this@MainActivity, "播放完成", Toast.LENGTH_SHORT).show()
             }
             error {

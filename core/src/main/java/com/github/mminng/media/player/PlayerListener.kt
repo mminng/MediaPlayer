@@ -3,7 +3,7 @@ package com.github.mminng.media.player
 /**
  * Created by zh on 2022/2/16.
  */
-interface PlayerListener {
+internal interface PlayerListener {
 
     fun onPrepared()
 

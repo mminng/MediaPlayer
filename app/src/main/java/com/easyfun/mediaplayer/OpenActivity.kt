@@ -11,7 +11,11 @@ class OpenActivity : AppCompatActivity() {
         setContentView(R.layout.activity_open)
         findViewById<Button>(R.id.open).setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java))
+
 //            startActivity(Intent(this, TestActivity::class.java))
+
+//            val dialogVideoFragment: DialogVideoFragment = DialogVideoFragment();
+//            dialogVideoFragment.show(supportFragmentManager,"DialogVideoFragment")
         }
     }
 }

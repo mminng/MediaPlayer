@@ -19,7 +19,7 @@ class TextureRenderView @JvmOverloads constructor(
     private var _renderMode: RenderMode = RenderMode.FIT
     private var _listener: Renderer.Listener? = null
     private var _surfaceTexture: SurfaceTexture? = null
-    private val surface: Surface by lazy {
+    private val surface: Surface by lazy(LazyThreadSafetyMode.NONE) {
         Surface(surfaceTexture)
     }
 
@@ -29,18 +29,17 @@ class TextureRenderView @JvmOverloads constructor(
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        val size: IntArray =
-            resize(
-                _videoWidth.toFloat(),
-                _videoHeight.toFloat(),
-                measuredWidth.toFloat(),
-                measuredHeight.toFloat(),
-                _renderMode
-            )
-        if (size.isEmpty()) return
+        val size: android.util.Pair<Int, Int> = resize(
+            _videoWidth.toFloat(),
+            _videoHeight.toFloat(),
+            measuredWidth.toFloat(),
+            measuredHeight.toFloat(),
+            _renderMode
+        )
+        if (size.first == 0 || size.second == 0) return
         super.onMeasure(
-            MeasureSpec.makeMeasureSpec(size[0], MeasureSpec.EXACTLY),
-            MeasureSpec.makeMeasureSpec(size[1], MeasureSpec.EXACTLY)
+            MeasureSpec.makeMeasureSpec(size.first, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(size.second, MeasureSpec.EXACTLY)
         )
     }
 
@@ -77,16 +76,16 @@ class TextureRenderView @JvmOverloads constructor(
         _surfaceTexture?.let {
             setSurfaceTexture(it)
         }
-        _listener?.onRenderCreated(this.surface)
+        _listener?.onRendererCreated(this.surface)
     }
 
     override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
-        _listener?.onRenderChanged(width, height)
+        _listener?.onRendererChanged(width, height)
     }
 
     override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
         _surfaceTexture = surface
-        _listener?.onRenderDestroyed()
+        _listener?.onRendererDestroyed()
         return false
     }
 

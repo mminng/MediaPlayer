@@ -2,6 +2,7 @@ package com.github.mminng.media.renderer
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Pair
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
@@ -24,18 +25,17 @@ class SurfaceRenderView @JvmOverloads constructor(
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        val size: IntArray =
-            resize(
-                _videoWidth.toFloat(),
-                _videoHeight.toFloat(),
-                measuredWidth.toFloat(),
-                measuredHeight.toFloat(),
-                _renderMode
-            )
-        if (size.isEmpty()) return
+        val size: Pair<Int, Int> = resize(
+            _videoWidth.toFloat(),
+            _videoHeight.toFloat(),
+            measuredWidth.toFloat(),
+            measuredHeight.toFloat(),
+            _renderMode
+        )
+        if (size.first == 0 || size.second == 0) return
         super.onMeasure(
-            MeasureSpec.makeMeasureSpec(size[0], MeasureSpec.EXACTLY),
-            MeasureSpec.makeMeasureSpec(size[1], MeasureSpec.EXACTLY)
+            MeasureSpec.makeMeasureSpec(size.first, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(size.second, MeasureSpec.EXACTLY)
         )
     }
 
@@ -67,14 +67,14 @@ class SurfaceRenderView @JvmOverloads constructor(
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-        _listener?.onRenderCreated(holder.surface)
+        _listener?.onRendererCreated(holder.surface)
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        _listener?.onRenderChanged(width, height)
+        _listener?.onRendererChanged(width, height)
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
-        _listener?.onRenderDestroyed()
+        _listener?.onRendererDestroyed()
     }
 }
